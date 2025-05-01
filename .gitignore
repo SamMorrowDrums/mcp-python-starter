@@ -20,7 +20,6 @@ lib64/
 parts/
 sdist/
 var/
-*.egg-info/
 .installed.cfg
 *.egg
 
@@ -50,8 +49,7 @@ coverage.xml
 # Jupyter Notebook
 .ipynb_checkpoints
 
-# VS Code
-.vscode/
+
 
 # mypy
 .mypy_cache/

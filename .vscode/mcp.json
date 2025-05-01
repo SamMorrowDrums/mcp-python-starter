@@ -1,0 +1,30 @@
+{
+  "inputs": [
+    {
+      "type": "promptString",
+      "id": "MCP_GREETING",
+      "description": "Greeting for the hello tool",
+      "default": "Hello"
+    },
+    {
+      "type": "promptString",
+      "id": "MCP_SECRET",
+      "description": "Secret value for the server",
+      "default": "SecretValue",
+      "password": true
+    }
+  ],
+  "servers": {
+    "mcp-python-starter": {
+      "command": "python",
+      "args": [
+        "${workspaceFolder}/server.py",
+        "stdio"
+      ],
+      "env": {
+        "MCP_GREETING": "${input:MCP_GREETING}",
+        "MCP_SECRET": "${input:MCP_SECRET}"
+      }
+    }
+  }
+}
