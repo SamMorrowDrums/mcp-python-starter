@@ -5,6 +5,6 @@ description = "A minimal Model Context Protocol (MCP) server in Python."
 readme = "README.md"
 requires-python = ">=3.8"
 dependencies = [
-    "modelcontextprotocol[server]",
-    "mcp"
+    "modelcontextprotocol[server]>=0.1.0",
+    "mcp>=1.9.4"
 ]

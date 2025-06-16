@@ -1,3 +1,4 @@
+LICENSE
 README.md
 pyproject.toml
 mcp_python_starter.egg-info/PKG-INFO

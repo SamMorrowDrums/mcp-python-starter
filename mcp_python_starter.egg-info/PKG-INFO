@@ -4,8 +4,10 @@ Version: 0.1.0
 Summary: A minimal Model Context Protocol (MCP) server in Python.
 Requires-Python: >=3.8
 Description-Content-Type: text/markdown
+License-File: LICENSE
 Requires-Dist: modelcontextprotocol[server]
 Requires-Dist: mcp
+Dynamic: license-file
 
 # MCP Python Starter
 
@@ -25,7 +27,7 @@ A minimal Model Context Protocol (MCP) server implemented in Python, matching th
 1. **Install dependencies**
 
    ```sh
-   pip install modelcontextprotocol[server]
+   pip install .
    ```
 
 2. **Run the server**
