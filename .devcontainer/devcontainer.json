@@ -8,7 +8,9 @@
     "vscode": {
       "settings": {
         "python.analysis.autoSearchPaths": true,
-        "python.analysis.useLibraryCodeForTypes": true
+        "python.analysis.useLibraryCodeForTypes": true,
+          "python.terminal.activateEnvironment": true,
+          "terminal.integrated.defaultProfile.linux": "bash"
       }
     }
   },
