@@ -22,6 +22,15 @@ from mcp.server.fastmcp import FastMCP
 from mcp.server.session import ServerSession
 from mcp.types import Icon, ToolAnnotations
 
+from .icons import (
+    ABACUS_ICON,
+    HOURGLASS_ICON,
+    PACKAGE_ICON,
+    ROBOT_ICON,
+    SUN_BEHIND_CLOUD_ICON,
+    WAVING_HAND_ICON,
+)
+
 if TYPE_CHECKING:
     from mcp.server.fastmcp import Context
 
@@ -94,7 +103,7 @@ def register_tools(mcp: FastMCP) -> None:
         ),
         icons=[
             Icon(
-                src="https://raw.githubusercontent.com/microsoft/fluentui-emoji/main/assets/Waving%20hand/3D/waving_hand_3d.png",
+                src=WAVING_HAND_ICON,
                 mimeType="image/png",
                 sizes=["256x256"],
             ),
@@ -118,7 +127,7 @@ def register_tools(mcp: FastMCP) -> None:
         ),
         icons=[
             Icon(
-                src="https://raw.githubusercontent.com/microsoft/fluentui-emoji/main/assets/Sun%20behind%20cloud/3D/sun_behind_cloud_3d.png",
+                src=SUN_BEHIND_CLOUD_ICON,
                 mimeType="image/png",
                 sizes=["256x256"],
             ),
@@ -149,7 +158,7 @@ def register_tools(mcp: FastMCP) -> None:
         ),
         icons=[
             Icon(
-                src="https://raw.githubusercontent.com/microsoft/fluentui-emoji/main/assets/Robot/3D/robot_3d.png",
+                src=ROBOT_ICON,
                 mimeType="image/png",
                 sizes=["256x256"],
             ),
@@ -192,7 +201,7 @@ def register_tools(mcp: FastMCP) -> None:
         ),
         icons=[
             Icon(
-                src="https://raw.githubusercontent.com/microsoft/fluentui-emoji/main/assets/Hourglass%20not%20done/3D/hourglass_not_done_3d.png",
+                src=HOURGLASS_ICON,
                 mimeType="image/png",
                 sizes=["256x256"],
             ),
@@ -233,7 +242,7 @@ def register_tools(mcp: FastMCP) -> None:
         ),
         icons=[
             Icon(
-                src="https://raw.githubusercontent.com/microsoft/fluentui-emoji/main/assets/Package/3D/package_3d.png",
+                src=PACKAGE_ICON,
                 mimeType="image/png",
                 sizes=["256x256"],
             ),
@@ -256,7 +265,7 @@ def register_tools(mcp: FastMCP) -> None:
             ),
             icons=[
                 Icon(
-                    src="https://raw.githubusercontent.com/microsoft/fluentui-emoji/main/assets/Abacus/3D/abacus_3d.png",
+                    src=ABACUS_ICON,
                     mimeType="image/png",
                     sizes=["256x256"],
                 ),
