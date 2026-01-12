@@ -1,0 +1,283 @@
+"""
+MCP Tools - All tool definitions for the server.
+
+## Tool Annotations
+
+Every tool MUST have annotations to help AI assistants understand behavior:
+- readOnlyHint: Tool only reads data, doesn't modify state
+- destructiveHint: Tool can permanently delete or modify data
+- idempotentHint: Repeated calls with same args have same effect
+- openWorldHint: Tool accesses external systems (web, APIs, etc.)
+
+See: https://modelcontextprotocol.io/docs/concepts/tools
+"""
+
+from __future__ import annotations
+
+import asyncio
+import random
+from typing import TYPE_CHECKING, Any, Literal
+
+from mcp.server.fastmcp import FastMCP
+from mcp.server.session import ServerSession
+from mcp.types import Icon, ToolAnnotations
+
+if TYPE_CHECKING:
+    from mcp.server.fastmcp import Context
+
+# Enum type for calculator operations
+Operation = Literal["add", "subtract", "multiply", "divide"]
+
+# Track if bonus tool is loaded
+_bonus_tool_loaded = False
+
+# =============================================================================
+# Common annotation patterns for reuse across tools
+# =============================================================================
+
+# Read-only tool that doesn't modify any state
+ANNOTATIONS_READ_ONLY = ToolAnnotations(
+    title="Read Only",
+    readOnlyHint=True,
+    destructiveHint=False,
+    idempotentHint=True,
+    openWorldHint=False,
+)
+
+# Tool that simulates external data (weather, APIs, etc.)
+ANNOTATIONS_SIMULATED_EXTERNAL = ToolAnnotations(
+    title="Simulated External Data",
+    readOnlyHint=True,
+    destructiveHint=False,
+    idempotentHint=False,  # Results vary due to simulation
+    openWorldHint=False,  # Simulated, not real external calls
+)
+
+# Tool that invokes LLM sampling
+ANNOTATIONS_SAMPLING = ToolAnnotations(
+    title="LLM Sampling",
+    readOnlyHint=True,
+    destructiveHint=False,
+    idempotentHint=False,  # LLM responses vary
+    openWorldHint=False,  # Uses connected client, not external
+)
+
+# Tool that mutates server state
+ANNOTATIONS_STATE_MUTATING = ToolAnnotations(
+    title="State Mutating",
+    readOnlyHint=False,
+    destructiveHint=False,
+    idempotentHint=True,  # Loading twice is safe
+    openWorldHint=False,
+)
+
+# Pure computation tool
+ANNOTATIONS_PURE_COMPUTATION = ToolAnnotations(
+    title="Pure Computation",
+    readOnlyHint=True,
+    destructiveHint=False,
+    idempotentHint=True,
+    openWorldHint=False,
+)
+
+
+def register_tools(mcp: FastMCP) -> None:
+    """Register all tools with the MCP server."""
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Say Hello",
+            readOnlyHint=True,
+            destructiveHint=False,
+            idempotentHint=True,
+            openWorldHint=False,
+        ),
+        icons=[
+            Icon(
+                src="https://raw.githubusercontent.com/microsoft/fluentui-emoji/main/assets/Waving%20hand/3D/waving_hand_3d.png",
+                mimeType="image/png",
+                sizes=["256x256"],
+            ),
+        ],
+    )
+    def hello(name: str) -> str:
+        """A friendly greeting tool that says hello to someone.
+
+        Args:
+            name: The name to greet
+        """
+        return f"Hello, {name}! Welcome to MCP."
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Get Weather",
+            readOnlyHint=True,
+            destructiveHint=False,
+            idempotentHint=False,  # Simulated - results vary
+            openWorldHint=False,  # Not real external call
+        ),
+        icons=[
+            Icon(
+                src="https://raw.githubusercontent.com/microsoft/fluentui-emoji/main/assets/Sun%20behind%20cloud/3D/sun_behind_cloud_3d.png",
+                mimeType="image/png",
+                sizes=["256x256"],
+            ),
+        ],
+    )
+    def get_weather(location: str) -> dict[str, Any]:
+        """Get current weather for a location (simulated).
+
+        Args:
+            location: City name or coordinates
+        """
+        conditions = ["sunny", "cloudy", "rainy", "windy"]
+        return {
+            "location": location,
+            "temperature": round(15 + random.random() * 20),
+            "unit": "celsius",
+            "conditions": random.choice(conditions),
+            "humidity": round(40 + random.random() * 40),
+        }
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Ask LLM",
+            readOnlyHint=True,
+            destructiveHint=False,
+            idempotentHint=False,  # LLM responses vary
+            openWorldHint=False,
+        ),
+        icons=[
+            Icon(
+                src="https://raw.githubusercontent.com/microsoft/fluentui-emoji/main/assets/Robot/3D/robot_3d.png",
+                mimeType="image/png",
+                sizes=["256x256"],
+            ),
+        ],
+    )
+    async def ask_llm(
+        prompt: str,
+        ctx: Context[ServerSession, None],
+        max_tokens: int = 100,
+    ) -> str:
+        """Ask the connected LLM a question using sampling.
+
+        Args:
+            prompt: The question or prompt for the LLM
+            max_tokens: Maximum tokens in response
+        """
+        try:
+            result = await ctx.session.create_message(
+                messages=[
+                    {
+                        "role": "user",
+                        "content": {"type": "text", "text": prompt},
+                    }
+                ],
+                max_tokens=max_tokens,
+            )
+            if result.content.type == "text":
+                return f"LLM Response: {result.content.text}"
+            return "LLM Response: [non-text response]"
+        except Exception as e:
+            return f"Sampling not supported or failed: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Long Running Task",
+            readOnlyHint=True,
+            destructiveHint=False,
+            idempotentHint=True,
+            openWorldHint=False,
+        ),
+        icons=[
+            Icon(
+                src="https://raw.githubusercontent.com/microsoft/fluentui-emoji/main/assets/Hourglass%20not%20done/3D/hourglass_not_done_3d.png",
+                mimeType="image/png",
+                sizes=["256x256"],
+            ),
+        ],
+    )
+    async def long_task(
+        task_name: str,
+        ctx: Context[ServerSession, None],
+    ) -> str:
+        """A task that takes 5 seconds and reports progress along the way.
+
+        Args:
+            task_name: Name for this task
+        """
+        steps = 5
+
+        await ctx.info(f"Starting task: {task_name}")
+
+        for i in range(steps):
+            await ctx.report_progress(
+                progress=i / steps,
+                total=1.0,
+                message=f"Step {i + 1}/{steps}",
+            )
+            await asyncio.sleep(1.0)
+
+        await ctx.report_progress(progress=1.0, total=1.0, message="Complete!")
+
+        return f'Task "{task_name}" completed successfully after {steps} steps!'
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Load Bonus Tool",
+            readOnlyHint=False,  # Modifies server state
+            destructiveHint=False,
+            idempotentHint=True,  # Safe to call multiple times
+            openWorldHint=False,
+        ),
+        icons=[
+            Icon(
+                src="https://raw.githubusercontent.com/microsoft/fluentui-emoji/main/assets/Package/3D/package_3d.png",
+                mimeType="image/png",
+                sizes=["256x256"],
+            ),
+        ],
+    )
+    def load_bonus_tool() -> str:
+        """Dynamically loads a bonus tool that wasn't available at startup."""
+        global _bonus_tool_loaded
+
+        if _bonus_tool_loaded:
+            return "Bonus tool is already loaded! Try calling 'bonus_calculator'."
+
+        @mcp.tool(
+            annotations=ToolAnnotations(
+                title="Bonus Calculator",
+                readOnlyHint=True,
+                destructiveHint=False,
+                idempotentHint=True,  # Pure computation
+                openWorldHint=False,
+            ),
+            icons=[
+                Icon(
+                    src="https://raw.githubusercontent.com/microsoft/fluentui-emoji/main/assets/Abacus/3D/abacus_3d.png",
+                    mimeType="image/png",
+                    sizes=["256x256"],
+                ),
+            ],
+        )
+        def bonus_calculator(a: float, b: float, operation: Operation) -> str:
+            """A calculator that was dynamically loaded.
+
+            Args:
+                a: First number
+                b: Second number
+                operation: Mathematical operation to perform
+            """
+            ops = {
+                "add": a + b,
+                "subtract": a - b,
+                "multiply": a * b,
+                "divide": a / b if b != 0 else float("nan"),
+            }
+            result = ops.get(operation, float("nan"))
+            return f"{a} {operation} {b} = {result}"
+
+        _bonus_tool_loaded = True
+        return "Bonus tool 'bonus_calculator' has been loaded! Refresh your tools list to see it."

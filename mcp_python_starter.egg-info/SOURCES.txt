@@ -1,8 +1,0 @@
-LICENSE
-README.md
-pyproject.toml
-mcp_python_starter.egg-info/PKG-INFO
-mcp_python_starter.egg-info/SOURCES.txt
-mcp_python_starter.egg-info/dependency_links.txt
-mcp_python_starter.egg-info/requires.txt
-mcp_python_starter.egg-info/top_level.txt

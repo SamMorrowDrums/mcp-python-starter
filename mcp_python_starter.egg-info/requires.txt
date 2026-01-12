@@ -1,2 +1,0 @@
-modelcontextprotocol[server]
-mcp

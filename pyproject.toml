@@ -1,10 +1,58 @@
 [project]
 name = "mcp-python-starter"
-version = "0.1.0"
-description = "A minimal Model Context Protocol (MCP) server in Python."
+version = "1.0.0"
+description = "A feature-complete MCP server starter template in Python"
 readme = "README.md"
-requires-python = ">=3.8"
+license = { text = "MIT" }
+requires-python = ">=3.11"
 dependencies = [
-    "modelcontextprotocol[server]>=0.1.0",
-    "mcp>=1.9.4"
+    "mcp>=1.0.0",
+    "click>=8.1.0",
+    "uvicorn>=0.30.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "ruff>=0.4.0",
+    "pyright>=1.1.350",
+    "pytest>=8.0.0",
+]
+# Tasks are experimental and require additional dependencies for HTTP transport
+tasks = [
+    "starlette>=0.40.0",
+    "anyio>=4.0.0",
+]
+
+[project.scripts]
+mcp-python-starter = "mcp_starter.server:main"
+mcp-python-starter-tasks = "mcp_starter.tasks:run_task_server"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["mcp_starter"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "N", "W", "UP", "B", "SIM", "RUF"]
+ignore = ["E501"]
+
+[tool.ruff.format]
+quote-style = "double"
+indent-style = "space"
+skip-magic-trailing-comma = false
+line-ending = "auto"
+
+[tool.pyright]
+pythonVersion = "3.11"
+typeCheckingMode = "basic"
+
+[dependency-groups]
+dev = [
+    "ruff>=0.14.11",
 ]
