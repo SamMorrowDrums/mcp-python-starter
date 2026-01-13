@@ -125,14 +125,7 @@ The [MCP Inspector](https://modelcontextprotocol.io/docs/tools/inspector) is an 
 ### Running Inspector
 
 ```bash
-# Option 1: Use the built-in mcp dev command (recommended for Python)
-uv run mcp dev mcp_starter/server.py
-
-# Option 2: Use the npm-based inspector
-npx @modelcontextprotocol/inspector uv run mcp-python-starter --stdio
-
-# Option 3: Point to module directly
-npx @modelcontextprotocol/inspector uv run python -m mcp_starter.server --stdio
+npx @modelcontextprotocol/inspector -- uv run mcp-python-starter
 ```
 
 ### What Inspector Provides
