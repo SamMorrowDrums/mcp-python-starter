@@ -83,7 +83,6 @@ Use these hints to make informed decisions about tool usage.
 # Initialize FastMCP server with instructions
 mcp = FastMCP(
     "mcp-python-starter",
-    version="1.0.0",
     instructions=SERVER_INSTRUCTIONS,
 )
 

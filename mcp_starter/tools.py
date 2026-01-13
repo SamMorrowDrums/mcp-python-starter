@@ -28,7 +28,7 @@ import asyncio
 import random
 from typing import TYPE_CHECKING, Any, Literal
 
-from mcp.server.fastmcp import FastMCP
+from mcp.server.fastmcp import Context, FastMCP
 from mcp.server.session import ServerSession
 from mcp.types import Icon, ToolAnnotations
 
@@ -40,9 +40,6 @@ from .icons import (
     SUN_BEHIND_CLOUD_ICON,
     WAVING_HAND_ICON,
 )
-
-if TYPE_CHECKING:
-    from mcp.server.fastmcp import Context
 
 # Enum type for calculator operations
 Operation = Literal["add", "subtract", "multiply", "divide"]
