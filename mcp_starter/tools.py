@@ -3,7 +3,17 @@ MCP Tools - All tool definitions for the server.
 
 ## Tool Annotations
 
-Every tool MUST have annotations to help AI assistants understand behavior:
+Every tool MUST have annotations to help AI assistants understand behavior.
+
+WHY ANNOTATIONS MATTER:
+Annotations enable MCP client applications to understand the risk level of
+tool calls. Clients can use these hints to implement safety policies, such as:
+  - Prompting users for confirmation before executing destructive operations
+  - Auto-approving read-only tools while requiring approval for writes
+  - Warning users when tools access external systems (openWorldHint)
+  - Optimizing retry logic for idempotent operations
+
+ANNOTATION FIELDS:
 - readOnlyHint: Tool only reads data, doesn't modify state
 - destructiveHint: Tool can permanently delete or modify data
 - idempotentHint: Repeated calls with same args have same effect
@@ -292,7 +302,24 @@ def register_tools(mcp: FastMCP) -> None:
         return "Bonus tool 'bonus_calculator' has been loaded! Refresh your tools list to see it."
 
     # =========================================================================
-    # Elicitation Tools - Demonstrate requesting user input during tool execution
+    # Elicitation Tools - Request user input during tool execution
+    #
+    # WHY ELICITATION MATTERS:
+    # Elicitation allows tools to request additional information from users
+    # mid-execution, enabling interactive workflows. This is essential for:
+    #   - Confirming destructive actions before they happen
+    #   - Gathering missing parameters that weren't provided upfront
+    #   - Implementing approval workflows for sensitive operations
+    #   - Collecting feedback or additional context during execution
+    #
+    # TWO ELICITATION MODES:
+    # - Form (elicit_form): Display a structured form with typed fields
+    # - URL (elicit_url): Open a web page (OAuth, feedback form, docs, etc.)
+    #
+    # RESPONSE ACTIONS:
+    # - "accept": User provided the requested information
+    # - "decline": User explicitly refused to provide information
+    # - "cancel": User dismissed the request without responding
     # =========================================================================
 
     @mcp.tool(
@@ -314,6 +341,8 @@ def register_tools(mcp: FastMCP) -> None:
             action: The action to confirm with the user
         """
         try:
+            # Form elicitation: Display a structured form with typed fields
+            # The client renders this as a dialog/form based on the JSON schema
             result = await ctx.session.elicit_form(
                 message=f"Please confirm: {action}",
                 requestedSchema={
@@ -370,6 +399,8 @@ def register_tools(mcp: FastMCP) -> None:
             feedback_url += f"&title={topic}"
 
         try:
+            # URL elicitation: Open a web page in the user's browser
+            # Useful for OAuth flows, external forms, documentation links, etc.
             result = await ctx.session.elicit_url(
                 message="Please provide feedback on MCP Starters by completing the form at the URL below:",
                 url=feedback_url,
