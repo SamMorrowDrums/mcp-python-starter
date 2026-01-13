@@ -45,11 +45,16 @@ A demonstration MCP server showcasing Python/FastMCP capabilities.
 - **load_bonus_tool**: Dynamically adds a calculator tool at runtime
 - **bonus_calculator**: Available after calling load_bonus_tool
 
+### Elicitation (User Input)
+- **confirm_action**: Demonstrates schema elicitation - requests user confirmation
+- **get_feedback**: Demonstrates URL elicitation - opens feedback form in browser
+
 ## Available Resources
 
-- **config://settings**: Server configuration as JSON
-- **status://server**: Current server status
-- **notes://{name}**: Dynamic notes by name (e.g., notes://example)
+- **info://about**: Server information
+- **file://example.md**: Sample markdown document
+- **greeting://{name}**: Personalized greeting template
+- **data://items/{item_id}**: Item data by ID
 
 ## Available Prompts
 
@@ -62,6 +67,8 @@ A demonstration MCP server showcasing Python/FastMCP capabilities.
 2. **Weather Demo**: Call `get_weather` with a location to see structured output
 3. **Progress Demo**: Call `long_task` to see progress notifications
 4. **Dynamic Loading**: Call `load_bonus_tool`, then refresh tools to see `bonus_calculator`
+5. **Elicitation Demo**: Call `confirm_action` to see user confirmation flow
+6. **URL Elicitation**: Call `get_feedback` to open a feedback form
 
 ## Tool Annotations
 

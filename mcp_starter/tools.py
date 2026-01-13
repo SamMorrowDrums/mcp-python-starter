@@ -290,3 +290,96 @@ def register_tools(mcp: FastMCP) -> None:
 
         _bonus_tool_loaded = True
         return "Bonus tool 'bonus_calculator' has been loaded! Refresh your tools list to see it."
+
+    # =========================================================================
+    # Elicitation Tools - Demonstrate requesting user input during tool execution
+    # =========================================================================
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Confirm Action",
+            readOnlyHint=True,
+            destructiveHint=False,
+            idempotentHint=False,  # User response varies
+            openWorldHint=False,
+        ),
+    )
+    async def confirm_action(
+        action: str,
+        ctx: Context[ServerSession, None],
+    ) -> str:
+        """Demonstrates elicitation - requests user confirmation before proceeding.
+
+        Args:
+            action: The action to confirm with the user
+        """
+        try:
+            result = await ctx.session.elicit_form(
+                message=f"Please confirm: {action}",
+                requestedSchema={
+                    "type": "object",
+                    "properties": {
+                        "confirm": {
+                            "type": "boolean",
+                            "title": "Confirm",
+                            "description": "Confirm the action",
+                        },
+                        "reason": {
+                            "type": "string",
+                            "title": "Reason",
+                            "description": "Optional reason for your choice",
+                        },
+                    },
+                    "required": ["confirm"],
+                },
+            )
+
+            if result.action == "accept":
+                content = result.content or {}
+                if content.get("confirm"):
+                    reason = content.get("reason", "No reason provided")
+                    return f"Action confirmed: {action}\nReason: {reason}"
+                return f"Action declined by user: {action}"
+            elif result.action == "decline":
+                return f"User declined to respond for: {action}"
+            else:  # cancel
+                return f"User cancelled elicitation for: {action}"
+        except Exception as e:
+            return f"Elicitation not supported or failed: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Get Feedback",
+            readOnlyHint=True,
+            destructiveHint=False,
+            idempotentHint=False,  # User response varies
+            openWorldHint=True,  # Opens external URL
+        ),
+    )
+    async def get_feedback(
+        ctx: Context[ServerSession, None],
+        topic: str = "",
+    ) -> str:
+        """Demonstrates URL elicitation - opens a feedback form in the browser.
+
+        Args:
+            topic: Optional topic for the feedback
+        """
+        feedback_url = "https://github.com/SamMorrowDrums/mcp-starters/issues/new?template=workshop-feedback.yml"
+        if topic:
+            feedback_url += f"&title={topic}"
+
+        try:
+            result = await ctx.session.elicit_url(
+                message="Please provide feedback on MCP Starters by completing the form at the URL below:",
+                url=feedback_url,
+            )
+
+            if result.action == "accept":
+                return "Thank you for providing feedback! Your input helps improve MCP Starters."
+            elif result.action == "decline":
+                return f"No problem! Feel free to provide feedback anytime at: {feedback_url}"
+            else:  # cancel
+                return "Feedback request cancelled."
+        except Exception as e:
+            return f"URL elicitation not supported or failed: {e}\n\nYou can still provide feedback at: {feedback_url}"
