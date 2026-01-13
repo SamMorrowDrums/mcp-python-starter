@@ -3,7 +3,7 @@ MCP Tools - All tool definitions for the server.
 
 ## Tool Annotations
 
-Every tool MUST have annotations to help AI assistants understand behavior.
+Every tool SHOULD have annotations to help AI assistants understand behavior.
 
 WHY ANNOTATIONS MATTER:
 Annotations enable MCP client applications to understand the risk level of
