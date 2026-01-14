@@ -42,12 +42,12 @@ from mcp.server.streamable_http_manager import StreamableHTTPSessionManager
 
 def create_task_server() -> Server:
     """Create and configure a task-enabled MCP server.
-    
+
     This creates a low-level Server instance with experimental task support.
     Unlike FastMCP, this requires manual handler registration.
     """
     server = Server("mcp-python-starter-tasks")
-    
+
     # Enable experimental task support
     # This auto-registers handlers for:
     # - tasks/get
@@ -55,7 +55,7 @@ def create_task_server() -> Server:
     # - tasks/list
     # - tasks/cancel
     server.experimental.enable_tasks()
-    
+
     # Register tool list handler
     @server.list_tools()
     async def list_tools() -> list[types.Tool]:
@@ -108,50 +108,50 @@ def create_task_server() -> Server:
                 execution=types.ToolExecution(taskSupport=types.TASK_REQUIRED),
             ),
         ]
-    
+
     # Tool handlers
     async def handle_data_processing(arguments: dict[str, Any]) -> types.CreateTaskResult:
         """Process data with status updates - demonstrates task progress."""
         ctx = server.request_context
         ctx.experimental.validate_task_mode(types.TASK_REQUIRED)
-        
+
         data_size = arguments.get("data_size", 5)
-        
+
         async def work(task: ServerTaskContext) -> types.CallToolResult:
             await task.update_status("Initializing data processing...")
             await anyio.sleep(0.5)
-            
+
             for i in range(data_size):
                 if task.is_cancelled:
                     return types.CallToolResult(
                         content=[types.TextContent(type="text", text="Processing cancelled")]
                     )
-                
+
                 await task.update_status(f"Processing chunk {i + 1}/{data_size}...")
                 await anyio.sleep(1)  # Simulate work
-            
+
             await task.update_status("Finalizing results...")
             await anyio.sleep(0.5)
-            
+
             return types.CallToolResult(
                 content=[types.TextContent(
                     type="text",
                     text=f"Successfully processed {data_size} chunks of data!"
                 )]
             )
-        
+
         return await ctx.experimental.run_task(work)
-    
+
     async def handle_confirm_action(arguments: dict[str, Any]) -> types.CreateTaskResult:
         """Demonstrates elicitation - requests user confirmation."""
         ctx = server.request_context
         ctx.experimental.validate_task_mode(types.TASK_REQUIRED)
-        
+
         action = arguments.get("action", "perform unknown action")
-        
+
         async def work(task: ServerTaskContext) -> types.CallToolResult:
             await task.update_status("Waiting for user confirmation...")
-            
+
             # Request user input via elicitation
             result = await task.elicit(
                 message=f"Please confirm: {action}",
@@ -170,7 +170,7 @@ def create_task_server() -> Server:
                     "required": ["confirm"],
                 },
             )
-            
+
             if result.action == "accept" and result.content.get("confirm"):
                 reason = result.content.get("reason", "No reason provided")
                 return types.CallToolResult(
@@ -186,22 +186,22 @@ def create_task_server() -> Server:
                         text=f"Action declined: {action}"
                     )]
                 )
-        
+
         return await ctx.experimental.run_task(work)
-    
+
     async def handle_generate_content(arguments: dict[str, Any]) -> types.CreateTaskResult:
         """Generate content via LLM sampling within a task."""
         ctx = server.request_context
         ctx.experimental.validate_task_mode(types.TASK_REQUIRED)
-        
+
         prompt = arguments.get("prompt", "Write a short greeting")
-        
+
         async def work(task: ServerTaskContext) -> types.CallToolResult:
             await task.update_status("Preparing to generate content...")
             await anyio.sleep(0.5)
-            
+
             await task.update_status("Calling LLM for generation...")
-            
+
             try:
                 # Request LLM sampling from the client
                 result = await task.create_message(
@@ -213,12 +213,12 @@ def create_task_server() -> Server:
                     ],
                     max_tokens=200,
                 )
-                
+
                 if isinstance(result.content, types.TextContent):
                     generated_text = result.content.text
                 else:
                     generated_text = "[Non-text response received]"
-                
+
                 return types.CallToolResult(
                     content=[types.TextContent(
                         type="text",
@@ -233,9 +233,9 @@ def create_task_server() -> Server:
                     )],
                     isError=True,
                 )
-        
+
         return await ctx.experimental.run_task(work)
-    
+
     # Dispatch tool calls
     @server.call_tool()
     async def handle_call_tool(
@@ -247,7 +247,7 @@ def create_task_server() -> Server:
             "confirm_action": handle_confirm_action,
             "generate_content": handle_generate_content,
         }
-        
+
         if name in handlers:
             return await handlers[name](arguments)
         else:
@@ -255,15 +255,15 @@ def create_task_server() -> Server:
                 content=[types.TextContent(type="text", text=f"Unknown tool: {name}")],
                 isError=True,
             )
-    
+
     return server
 
 
 def run_task_server(host: str = "127.0.0.1", port: int = 8000) -> None:
     """Run the task-enabled server with Streamable HTTP transport.
-    
+
     Tasks require HTTP transport (not stdio) for proper operation.
-    
+
     Args:
         host: Host to bind to
         port: Port to listen on
@@ -271,20 +271,20 @@ def run_task_server(host: str = "127.0.0.1", port: int = 8000) -> None:
     import uvicorn
     from starlette.applications import Starlette
     from starlette.routing import Mount
-    
+
     server = create_task_server()
     session_manager = StreamableHTTPSessionManager(app=server)
-    
+
     @asynccontextmanager
     async def app_lifespan(app: Starlette) -> AsyncIterator[None]:
         async with session_manager.run():
             yield
-    
+
     starlette_app = Starlette(
         routes=[Mount("/mcp", app=session_manager.handle_request)],
         lifespan=app_lifespan,
     )
-    
+
     print(f"MCP Task Server starting on http://{host}:{port}/mcp")
     print("This server demonstrates experimental task support:")
     print("  - data_processing: Long-running task with progress updates")
@@ -292,21 +292,21 @@ def run_task_server(host: str = "127.0.0.1", port: int = 8000) -> None:
     print("  - generate_content: Task with LLM sampling")
     print()
     print("Note: Tasks require a compatible MCP client that supports task operations.")
-    
+
     uvicorn.run(starlette_app, host=host, port=port)
 
 
 if __name__ == "__main__":
     import sys
-    
+
     host = "127.0.0.1"
     port = 8000
-    
+
     # Simple arg parsing
     for i, arg in enumerate(sys.argv[1:], 1):
         if arg == "--host" and i < len(sys.argv):
             host = sys.argv[i + 1]
         elif arg == "--port" and i < len(sys.argv):
             port = int(sys.argv[i + 1])
-    
+
     run_task_server(host=host, port=port)

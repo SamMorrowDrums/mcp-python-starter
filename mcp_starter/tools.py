@@ -26,7 +26,7 @@ from __future__ import annotations
 
 import asyncio
 import random
-from typing import TYPE_CHECKING, Any, Literal
+from typing import Any, Literal
 
 from mcp.server.fastmcp import Context, FastMCP
 from mcp.server.session import ServerSession
@@ -46,55 +46,6 @@ Operation = Literal["add", "subtract", "multiply", "divide"]
 
 # Track if bonus tool is loaded
 _bonus_tool_loaded = False
-
-# =============================================================================
-# Common annotation patterns for reuse across tools
-# =============================================================================
-
-# Read-only tool that doesn't modify any state
-ANNOTATIONS_READ_ONLY = ToolAnnotations(
-    title="Read Only",
-    readOnlyHint=True,
-    destructiveHint=False,
-    idempotentHint=True,
-    openWorldHint=False,
-)
-
-# Tool that simulates external data (weather, APIs, etc.)
-ANNOTATIONS_SIMULATED_EXTERNAL = ToolAnnotations(
-    title="Simulated External Data",
-    readOnlyHint=True,
-    destructiveHint=False,
-    idempotentHint=False,  # Results vary due to simulation
-    openWorldHint=False,  # Simulated, not real external calls
-)
-
-# Tool that invokes LLM sampling
-ANNOTATIONS_SAMPLING = ToolAnnotations(
-    title="LLM Sampling",
-    readOnlyHint=True,
-    destructiveHint=False,
-    idempotentHint=False,  # LLM responses vary
-    openWorldHint=False,  # Uses connected client, not external
-)
-
-# Tool that mutates server state
-ANNOTATIONS_STATE_MUTATING = ToolAnnotations(
-    title="State Mutating",
-    readOnlyHint=False,
-    destructiveHint=False,
-    idempotentHint=True,  # Loading twice is safe
-    openWorldHint=False,
-)
-
-# Pure computation tool
-ANNOTATIONS_PURE_COMPUTATION = ToolAnnotations(
-    title="Pure Computation",
-    readOnlyHint=True,
-    destructiveHint=False,
-    idempotentHint=True,
-    openWorldHint=False,
-)
 
 
 def register_tools(mcp: FastMCP) -> None:
@@ -255,7 +206,7 @@ def register_tools(mcp: FastMCP) -> None:
             ),
         ],
     )
-    def load_bonus_tool() -> str:
+    async def load_bonus_tool(ctx: Context[ServerSession, None]) -> str:
         """Dynamically loads a bonus tool that wasn't available at startup."""
         global _bonus_tool_loaded
 
@@ -296,7 +247,11 @@ def register_tools(mcp: FastMCP) -> None:
             return f"{a} {operation} {b} = {result}"
 
         _bonus_tool_loaded = True
-        return "Bonus tool 'bonus_calculator' has been loaded! Refresh your tools list to see it."
+
+        # Notify clients that the tools list has changed
+        await ctx.session.send_tool_list_changed()
+
+        return "Bonus tool 'bonus_calculator' has been loaded! The tools list has been updated."
 
     # =========================================================================
     # Elicitation Tools - Request user input during tool execution
