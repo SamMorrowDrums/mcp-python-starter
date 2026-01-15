@@ -134,10 +134,11 @@ def create_task_server() -> Server:
             await anyio.sleep(0.5)
 
             return types.CallToolResult(
-                content=[types.TextContent(
-                    type="text",
-                    text=f"Successfully processed {data_size} chunks of data!"
-                )]
+                content=[
+                    types.TextContent(
+                        type="text", text=f"Successfully processed {data_size} chunks of data!"
+                    )
+                ]
             )
 
         return await ctx.experimental.run_task(work)
@@ -174,17 +175,15 @@ def create_task_server() -> Server:
             if result.action == "accept" and result.content.get("confirm"):
                 reason = result.content.get("reason", "No reason provided")
                 return types.CallToolResult(
-                    content=[types.TextContent(
-                        type="text",
-                        text=f"Action confirmed: {action}\nReason: {reason}"
-                    )]
+                    content=[
+                        types.TextContent(
+                            type="text", text=f"Action confirmed: {action}\nReason: {reason}"
+                        )
+                    ]
                 )
             else:
                 return types.CallToolResult(
-                    content=[types.TextContent(
-                        type="text",
-                        text=f"Action declined: {action}"
-                    )]
+                    content=[types.TextContent(type="text", text=f"Action declined: {action}")]
                 )
 
         return await ctx.experimental.run_task(work)
@@ -220,17 +219,17 @@ def create_task_server() -> Server:
                     generated_text = "[Non-text response received]"
 
                 return types.CallToolResult(
-                    content=[types.TextContent(
-                        type="text",
-                        text=f"Generated content:\n\n{generated_text}"
-                    )]
+                    content=[
+                        types.TextContent(
+                            type="text", text=f"Generated content:\n\n{generated_text}"
+                        )
+                    ]
                 )
             except Exception as e:
                 return types.CallToolResult(
-                    content=[types.TextContent(
-                        type="text",
-                        text=f"Content generation failed: {e}"
-                    )],
+                    content=[
+                        types.TextContent(type="text", text=f"Content generation failed: {e}")
+                    ],
                     isError=True,
                 )
 

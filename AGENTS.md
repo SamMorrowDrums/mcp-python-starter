@@ -2,6 +2,20 @@
 
 This file provides context for AI coding agents working in this repository.
 
+## Quick Reference
+
+| Task | Command |
+|------|---------|
+| Install | `uv sync --all-extras --dev` |
+| Test | `uv run pytest -v` |
+| Lint | `uv run ruff check .` |
+| Lint fix | `uv run ruff check --fix .` |
+| Format | `uv run ruff format .` |
+| Format check | `uv run ruff format --check .` |
+| Type check | `uv run mypy . --ignore-missing-imports` |
+| Run (stdio) | `uv run mcp-python-starter` |
+| Run (HTTP) | `uv run mcp-python-starter --http` |
+
 ## Project Overview
 
 **MCP Python Starter** is a feature-complete Model Context Protocol (MCP) server template in Python using FastMCP. It demonstrates all major MCP features including tools, resources, resource templates, prompts, sampling, progress updates, and dynamic tool loading.
@@ -10,11 +24,13 @@ This file provides context for AI coding agents working in this repository.
 
 ## Technology Stack
 
-- **Runtime**: Python 3.11+
+- **Runtime**: Python >=3.11
 - **MCP SDK**: `mcp` (FastMCP)
 - **HTTP Server**: uvicorn
 - **CLI**: Click
-- **Package Manager**: uv (recommended) or pip
+- **Package Manager**: uv (lockfile: `uv.lock` - committed to repo)
+- **Linter/Formatter**: Ruff
+- **Type Checker**: mypy or pyright
 
 ## Project Structure
 
@@ -38,42 +54,39 @@ pyproject.toml          # Package configuration and tool settings
 ## Build & Run Commands
 
 ```bash
-# Using uv (recommended)
-uv sync                      # Install dependencies
-uv run mcp-python-starter    # Run server (stdio)
-uv run mcp-python-starter --http  # Run server (HTTP)
+# Install dependencies (uses uv.lock for reproducible installs)
+uv sync --all-extras --dev
 
-# Using pip
-pip install -e ".[dev]"      # Install with dev dependencies
-python -m mcp_starter.server # Run server (stdio)
-python -m mcp_starter.server --http  # Run server (HTTP)
+# Run server (stdio)
+uv run mcp-python-starter
+
+# Run server (HTTP)
+uv run mcp-python-starter --http
 ```
 
 ## Linting & Formatting
 
 ```bash
-# Using uv
-uv run ruff check .          # Lint code
-uv run ruff check --fix .    # Fix lint issues
-uv run ruff format .         # Format code
+# Lint code
+uv run ruff check .
 
-# Using pip (after installing dev deps)
-ruff check .
-ruff check --fix .
-ruff format .
+# Fix lint issues
+uv run ruff check --fix .
+
+# Format code
+uv run ruff format .
+
+# Check formatting (CI mode)
+uv run ruff format --check .
 
 # Type checking
-uv run pyright
-# or
-pyright
+uv run mypy . --ignore-missing-imports
 ```
 
 ## Testing
 
 ```bash
-uv run pytest
-# or
-pytest
+uv run pytest -v
 ```
 
 ## Key Files to Modify
