@@ -15,7 +15,20 @@ jobs:
     uses: SamMorrowDrums/mcp-conformance-action/.github/workflows/conformance.yml@main
     with:
       install_command: "pip install -e ."
-      build_command: "echo 'No build step required for Python'"
-      start_command: "python -m mcp_starter.server"
       setup_python: true
       python_version: "3.11"
+      configurations: |
+        [
+          {
+            "name": "stdio",
+            "transport": "stdio",
+            "start_command": "python -m mcp_starter.server"
+          },
+          {
+            "name": "http",
+            "transport": "http",
+            "start_command": "python -m mcp_starter.server --http --port 3000",
+            "server_url": "http://localhost:3000/mcp",
+            "health_endpoint": "/health"
+          }
+        ]
