@@ -1,5 +1,11 @@
 # MCP Python Starter
 
+[![CI](https://github.com/SamMorrowDrums/mcp-python-starter/actions/workflows/ci.yml/badge.svg)](https://github.com/SamMorrowDrums/mcp-python-starter/actions/workflows/ci.yml)
+[![Python](https://img.shields.io/badge/Python-3.11%2B-3776AB?logo=python&logoColor=white)](https://www.python.org/)
+[![Ruff](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/astral-sh/ruff/main/assets/badge/v2.json)](https://github.com/astral-sh/ruff)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![MCP](https://img.shields.io/badge/MCP-Model%20Context%20Protocol-purple)](https://modelcontextprotocol.io/)
+
 A feature-complete Model Context Protocol (MCP) server template in Python using FastMCP. This starter demonstrates all major MCP features with clean, Pythonic code.
 
 ## 📚 Documentation
