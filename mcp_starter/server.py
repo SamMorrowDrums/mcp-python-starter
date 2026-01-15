@@ -104,7 +104,7 @@ def main(stdio: bool, http: bool, port: int) -> None:
     if stdio or (not stdio and not http):
         mcp.run(transport="stdio")
     elif http:
-        mcp.run(transport="streamable-http", host="0.0.0.0", port=port)
+        mcp.run(transport="streamable-http", port=port)
 
 
 if __name__ == "__main__":
