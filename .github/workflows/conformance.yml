@@ -1,0 +1,21 @@
+name: Conformance Test
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+    tags: ['v*']
+
+permissions:
+  contents: read
+
+jobs:
+  conformance:
+    uses: SamMorrowDrums/mcp-conformance-action/.github/workflows/conformance.yml@main
+    with:
+      install_command: "pip install -e ."
+      build_command: "echo 'No build step required for Python'"
+      start_command: "python -m mcp_starter.server"
+      setup_python: true
+      python_version: "3.11"
