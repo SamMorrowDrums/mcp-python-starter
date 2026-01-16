@@ -31,29 +31,6 @@ This is a feature-complete MCP server demonstrating:
 
 For more information, visit: https://modelcontextprotocol.io"""
 
-    @mcp.resource("file://example.md")
-    def example_file() -> str:
-        """An example markdown document."""
-        return """# Example Document
-
-This is an example markdown document served as an MCP resource.
-
-## Features
-
-- **Bold text** and *italic text*
-- Lists and formatting
-- Code blocks
-
-```python
-hello = "world"
-```
-
-## Links
-
-- [MCP Documentation](https://modelcontextprotocol.io)
-- [Python SDK](https://github.com/modelcontextprotocol/python-sdk)
-"""
-
     @mcp.resource("greeting://{name}")
     def greeting_template(name: str) -> str:
         """Generate a personalized greeting.
