@@ -103,7 +103,9 @@ def main(stdio: bool, http: bool, port: int) -> None:
     if stdio or (not stdio and not http):
         mcp.run(transport="stdio")
     elif http:
-        mcp.run(transport="streamable-http", port=port)
+        # Port must be set via settings, not run() parameter
+        mcp.settings.port = port
+        mcp.run(transport="streamable-http")
 
 
 if __name__ == "__main__":
