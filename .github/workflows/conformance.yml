@@ -19,13 +19,11 @@ jobs:
         with:
           fetch-depth: 0
 
-      - uses: actions/setup-python@v5
-        with:
-          python-version: '3.11'
-
       - uses: SamMorrowDrums/mcp-conformance-action@v1
         with:
-          install_command: "pip install -e ."
+          setup_python: true
+          python_version: '3.11'
+          install_command: pip install -e .
           configurations: |
             [
               {
