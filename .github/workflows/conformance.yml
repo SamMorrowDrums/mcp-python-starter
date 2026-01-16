@@ -13,7 +13,7 @@ permissions:
 
 jobs:
   conformance:
-    uses: SamMorrowDrums/mcp-conformance-action/.github/workflows/conformance.yml@v1.0.1
+    uses: SamMorrowDrums/mcp-conformance-action/.github/workflows/conformance.yml@v1.1.5
     with:
       install_command: "pip install -e ."
       setup_python: true
@@ -26,8 +26,8 @@ jobs:
             "start_command": "python -m mcp_starter.server"
           },
           {
-            "name": "http",
-            "transport": "http",
+            "name": "streamable-http",
+            "transport": "streamable-http",
             "start_command": "python -m mcp_starter.server --http --port 3000",
             "server_url": "http://localhost:3000/mcp"
           }
