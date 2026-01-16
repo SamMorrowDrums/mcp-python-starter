@@ -13,22 +13,30 @@ permissions:
 
 jobs:
   conformance:
-    uses: SamMorrowDrums/mcp-conformance-action/.github/workflows/conformance.yml@v1
-    with:
-      install_command: "pip install -e ."
-      setup_python: true
-      python_version: "3.11"
-      configurations: |
-        [
-          {
-            "name": "stdio",
-            "transport": "stdio",
-            "start_command": "python -m mcp_starter.server"
-          },
-          {
-            "name": "streamable-http",
-            "transport": "streamable-http",
-            "start_command": "python -m mcp_starter.server --http --port 3000",
-            "server_url": "http://localhost:3000/mcp"
-          }
-        ]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - uses: SamMorrowDrums/mcp-conformance-action@v1
+        with:
+          install_command: "pip install -e ."
+          configurations: |
+            [
+              {
+                "name": "stdio",
+                "transport": "stdio",
+                "start_command": "python -m mcp_starter.server"
+              },
+              {
+                "name": "streamable-http",
+                "transport": "streamable-http",
+                "start_command": "python -m mcp_starter.server --http --port 3000",
+                "server_url": "http://localhost:3000/mcp"
+              }
+            ]
