@@ -13,7 +13,7 @@ permissions:
 
 jobs:
   conformance:
-    uses: SamMorrowDrums/mcp-conformance-action/.github/workflows/conformance.yml@main
+    uses: SamMorrowDrums/mcp-conformance-action/.github/workflows/conformance.yml@v1.0.0
     with:
       install_command: "pip install -e ."
       setup_python: true
