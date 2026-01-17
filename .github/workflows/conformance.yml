@@ -19,7 +19,7 @@ jobs:
         with:
           fetch-depth: 0
 
-      - uses: SamMorrowDrums/mcp-conformance-action@v2.1.0
+      - uses: SamMorrowDrums/mcp-conformance-action@v2.2.0
         with:
           setup_python: true
           python_version: '3.11'
