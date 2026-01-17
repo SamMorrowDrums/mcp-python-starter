@@ -36,7 +36,7 @@ jobs:
   remote-conformance:
     # Only run if remote URL is configured
     if: vars.MCP_REMOTE_URL != '' || github.event.inputs.server_url != ''
-    uses: SamMorrowDrums/mcp-conformance-action/.github/workflows/conformance.yml@v2.2.0
+    uses: SamMorrowDrums/mcp-conformance-action/.github/workflows/conformance.yml@v2.3.0
     with:
       # No build needed for remote testing
       install_command: "echo 'Testing remote server'"
