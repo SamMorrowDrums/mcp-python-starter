@@ -1,0 +1,30 @@
+{
+  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+  "name": "mcp-python-starter",
+  "description": "A Python MCP server template demonstrating tools, prompts, and resources",
+  "title": "MCP Python Starter",
+  "repository": {
+    "url": "https://github.com/SamMorrowDrums/mcp-python-starter",
+    "source": "github"
+  },
+  "version": "1.0.0",
+  "packages": [
+    {
+      "registryType": "pip",
+      "identifier": "mcp-python-starter",
+      "transport": {
+        "type": "stdio"
+      },
+      "runtimeHint": "python",
+      "runtime": "python",
+      "command": ["uvx", "mcp-python-starter"]
+    }
+  ],
+  "remotes": [
+    {
+      "type": "streamable-http",
+      "url": "http://localhost:3000/mcp",
+      "description": "Local HTTP server"
+    }
+  ]
+}
