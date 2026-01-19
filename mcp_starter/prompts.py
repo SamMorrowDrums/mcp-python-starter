@@ -10,7 +10,7 @@ def register_prompts(mcp: FastMCP) -> None:
 
     @mcp.prompt(
         title="Greeting Prompt",
-        description="Generate a greeting in a specific style",
+        description="Generate a personalized greeting message with customizable style",
     )
     def greet(name: str, style: str = "casual") -> str:
         """Generate a greeting prompt.

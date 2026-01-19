@@ -67,13 +67,14 @@ def register_tools(mcp: FastMCP) -> None:
             ),
         ],
     )
-    def hello(name: str) -> str:
+    def hello(name: str, uppercase: bool = False) -> str:
         """A friendly greeting tool that says hello to someone.
 
         Args:
             name: The name to greet
+            uppercase: Whether to display the name in uppercase
         """
-        return f"Hello, {name}! Welcome to MCP."
+        return f"Hello, {name.upper() if uppercase else name}! Welcome to MCP."
 
     @mcp.tool(
         annotations=ToolAnnotations(
