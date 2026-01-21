@@ -73,6 +73,7 @@ hello = "world"
         "item://{id}",
         name="Item Data",
         description="Data for a specific item by ID",
+        mime_type="application/json",
     )
     def item_data(id: str) -> str:
         """Get data for a specific item by ID.
