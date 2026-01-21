@@ -46,35 +46,14 @@ def register_prompts(mcp: FastMCP) -> None:
     )
     def code_review(
         code: Annotated[str, Field(title="Code", description="The code to review")],
-        language: Annotated[
-            str,
-            Field(title="Language", description="Programming language of the code"),
-        ] = "python",
-        focus: Annotated[
-            str,
-            Field(
-                title="Focus",
-                description="What to focus on (security, performance, readability, or all)",
-            ),
-        ] = "all",
     ) -> str:
         """Generate a code review prompt.
 
         Args:
             code: The code to review
-            language: Programming language
-            focus: What to focus on (security, performance, readability, or all)
         """
-        focus_instructions = {
-            "security": "Focus on security vulnerabilities and potential exploits.",
-            "performance": "Focus on performance optimizations and efficiency issues.",
-            "readability": "Focus on code clarity, naming, and maintainability.",
-            "all": "Provide a comprehensive review covering security, performance, and readability.",
-        }
+        return f"""Please review the following code for potential improvements:
 
-        instruction = focus_instructions.get(focus, focus_instructions["all"])
-        return f"""Please review the following {language} code. {instruction}
-
-```{language}
+```
 {code}
 ```"""
