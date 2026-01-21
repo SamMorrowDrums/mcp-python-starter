@@ -2,17 +2,31 @@
 
 from __future__ import annotations
 
+from typing import Annotated
+
 from mcp.server.fastmcp import FastMCP
+from pydantic import Field
 
 
 def register_prompts(mcp: FastMCP) -> None:
-    """Register all prompts with the MCP server."""
+    """Register all prompts with the MCP server.
+
+    Note: The Python MCP SDK's PromptArgument model does not support a 'title' field,
+    only 'name', 'description', and 'required'. This is a limitation of the SDK compared
+    to the canonical MCP interface. The 'description' field is used for both purposes.
+    """
 
     @mcp.prompt(
         title="Greeting Prompt",
-        description="Generate a greeting in a specific style",
+        description="Generate a greeting message",
     )
-    def greet(name: str, style: str = "casual") -> str:
+    def greet(
+        name: Annotated[str, Field(title="Name", description="Name of the person to greet")],
+        style: Annotated[
+            str,
+            Field(title="Style", description="Greeting style (formal/casual)", default="casual"),
+        ] = "casual",
+    ) -> str:
         """Generate a greeting prompt.
 
         Args:
@@ -28,9 +42,25 @@ def register_prompts(mcp: FastMCP) -> None:
 
     @mcp.prompt(
         title="Code Review",
-        description="Request a code review with specific focus areas",
+        description="Review code for potential improvements",
     )
-    def code_review(code: str, language: str, focus: str = "all") -> str:
+    def code_review(
+        code: Annotated[str, Field(title="Code", description="The code to review")],
+        language: Annotated[
+            str,
+            Field(
+                title="Language", description="Programming language of the code", default="python"
+            ),
+        ] = "python",
+        focus: Annotated[
+            str,
+            Field(
+                title="Focus",
+                description="What to focus on (security, performance, readability, or all)",
+                default="all",
+            ),
+        ] = "all",
+    ) -> str:
         """Generate a code review prompt.
 
         Args:

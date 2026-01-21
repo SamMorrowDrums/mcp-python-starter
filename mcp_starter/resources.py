@@ -17,7 +17,7 @@ ITEMS_DATA: dict[str, dict[str, str]] = {
 def register_resources(mcp: FastMCP) -> None:
     """Register all resources and templates with the MCP server."""
 
-    @mcp.resource("info://about")
+    @mcp.resource("about://server", name="About", description="Information about this MCP server")
     def about_resource() -> str:
         """Information about this MCP server."""
         return """MCP Python Starter v1.0.0
@@ -31,7 +31,9 @@ This is a feature-complete MCP server demonstrating:
 
 For more information, visit: https://modelcontextprotocol.io"""
 
-    @mcp.resource("file://example.md")
+    @mcp.resource(
+        "doc://example", name="Example Document", description="An example document resource"
+    )
     def example_file() -> str:
         """An example markdown document."""
         return """# Example Document
@@ -54,7 +56,11 @@ hello = "world"
 - [Python SDK](https://github.com/modelcontextprotocol/python-sdk)
 """
 
-    @mcp.resource("greeting://{name}")
+    @mcp.resource(
+        "greeting://{name}",
+        name="Personalized Greeting",
+        description="A personalized greeting for a specific person",
+    )
     def greeting_template(name: str) -> str:
         """Generate a personalized greeting.
 
@@ -63,14 +69,18 @@ hello = "world"
         """
         return f"Hello, {name}! This greeting was generated just for you."
 
-    @mcp.resource("data://items/{item_id}")
-    def item_data(item_id: str) -> str:
+    @mcp.resource(
+        "item://{id}",
+        name="Item Data",
+        description="Data for a specific item by ID",
+    )
+    def item_data(id: str) -> str:
         """Get data for a specific item by ID.
 
         Args:
-            item_id: The item ID to look up
+            id: The item ID to look up
         """
-        item = ITEMS_DATA.get(item_id)
+        item = ITEMS_DATA.get(id)
         if not item:
-            raise ValueError(f"Item not found: {item_id}")
-        return json.dumps({"id": item_id, **item}, indent=2)
+            raise ValueError(f"Item not found: {id}")
+        return json.dumps({"id": id, **item}, indent=2)

@@ -26,11 +26,12 @@ from __future__ import annotations
 
 import asyncio
 import random
-from typing import Any, Literal
+from typing import Annotated, Any, Literal
 
 from mcp.server.fastmcp import Context, FastMCP
 from mcp.server.session import ServerSession
 from mcp.types import Icon, ToolAnnotations
+from pydantic import Field
 
 from .icons import (
     ABACUS_ICON,
@@ -67,12 +68,10 @@ def register_tools(mcp: FastMCP) -> None:
             ),
         ],
     )
-    def hello(name: str) -> str:
-        """A friendly greeting tool that says hello to someone.
-
-        Args:
-            name: The name to greet
-        """
+    def hello(
+        name: Annotated[str, Field(title="Name", description="Name of the person to greet")],
+    ) -> str:
+        """Say hello to a person."""
         return f"Hello, {name}! Welcome to MCP."
 
     @mcp.tool(
@@ -91,15 +90,13 @@ def register_tools(mcp: FastMCP) -> None:
             ),
         ],
     )
-    def get_weather(location: str) -> dict[str, Any]:
-        """Get current weather for a location (simulated).
-
-        Args:
-            location: City name or coordinates
-        """
+    def get_weather(
+        city: Annotated[str, Field(title="City", description="City name to get weather for")],
+    ) -> dict[str, Any]:
+        """Get the current weather for a city."""
         conditions = ["sunny", "cloudy", "rainy", "windy"]
         return {
-            "location": location,
+            "location": city,
             "temperature": round(15 + random.random() * 20),
             "unit": "celsius",
             "conditions": random.choice(conditions),
@@ -123,16 +120,15 @@ def register_tools(mcp: FastMCP) -> None:
         ],
     )
     async def ask_llm(
-        prompt: str,
+        prompt: Annotated[
+            str, Field(title="Prompt", description="The question or prompt to send to the LLM")
+        ],
         ctx: Context[ServerSession, None],
-        max_tokens: int = 100,
+        maxTokens: Annotated[
+            int, Field(title="Max Tokens", description="Maximum tokens in response", default=100)
+        ] = 100,
     ) -> str:
-        """Ask the connected LLM a question using sampling.
-
-        Args:
-            prompt: The question or prompt for the LLM
-            max_tokens: Maximum tokens in response
-        """
+        """Ask the connected LLM a question using sampling."""
         try:
             result = await ctx.session.create_message(
                 messages=[
@@ -141,7 +137,7 @@ def register_tools(mcp: FastMCP) -> None:
                         "content": {"type": "text", "text": prompt},
                     }
                 ],
-                max_tokens=max_tokens,
+                max_tokens=maxTokens,
             )
             if result.content.type == "text":
                 return f"LLM Response: {result.content.text}"
@@ -166,17 +162,14 @@ def register_tools(mcp: FastMCP) -> None:
         ],
     )
     async def long_task(
-        task_name: str,
+        taskName: Annotated[str, Field(title="Task Name", description="Name for this task")],
         ctx: Context[ServerSession, None],
+        steps: Annotated[
+            int, Field(title="Steps", description="Number of steps to simulate", default=5)
+        ] = 5,
     ) -> str:
-        """A task that takes 5 seconds and reports progress along the way.
-
-        Args:
-            task_name: Name for this task
-        """
-        steps = 5
-
-        await ctx.info(f"Starting task: {task_name}")
+        """Simulate a long-running task with progress updates."""
+        await ctx.info(f"Starting task: {taskName}")
 
         for i in range(steps):
             await ctx.report_progress(
@@ -188,7 +181,7 @@ def register_tools(mcp: FastMCP) -> None:
 
         await ctx.report_progress(progress=1.0, total=1.0, message="Complete!")
 
-        return f'Task "{task_name}" completed successfully after {steps} steps!'
+        return f'Task "{taskName}" completed successfully after {steps} steps!'
 
     @mcp.tool(
         annotations=ToolAnnotations(
@@ -207,7 +200,7 @@ def register_tools(mcp: FastMCP) -> None:
         ],
     )
     async def load_bonus_tool(ctx: Context[ServerSession, None]) -> str:
-        """Dynamically loads a bonus tool that wasn't available at startup."""
+        """Dynamically register a new bonus tool."""
         global _bonus_tool_loaded
 
         if _bonus_tool_loaded:
@@ -284,14 +277,18 @@ def register_tools(mcp: FastMCP) -> None:
         ),
     )
     async def confirm_action(
-        action: str,
+        action: Annotated[
+            str, Field(title="Action", description="Description of the action to confirm")
+        ],
         ctx: Context[ServerSession, None],
+        destructive: Annotated[
+            bool,
+            Field(
+                title="Destructive", description="Whether the action is destructive", default=False
+            ),
+        ] = False,
     ) -> str:
-        """Demonstrates elicitation - requests user confirmation before proceeding.
-
-        Args:
-            action: The action to confirm with the user
-        """
+        """Request user confirmation before proceeding."""
         try:
             # Form elicitation: Display a structured form with typed fields
             # The client renders this as a dialog/form based on the JSON schema
@@ -338,17 +335,15 @@ def register_tools(mcp: FastMCP) -> None:
         ),
     )
     async def get_feedback(
+        question: Annotated[
+            str, Field(title="Question", description="The question to ask the user")
+        ],
         ctx: Context[ServerSession, None],
-        topic: str = "",
     ) -> str:
-        """Demonstrates URL elicitation - opens a feedback form in the browser.
-
-        Args:
-            topic: Optional topic for the feedback
-        """
+        """Request feedback from the user."""
         feedback_url = "https://github.com/SamMorrowDrums/mcp-starters/issues/new?template=workshop-feedback.yml"
-        if topic:
-            feedback_url += f"&title={topic}"
+        if question:
+            feedback_url += f"&title={question}"
 
         try:
             # URL elicitation: Open a web page in the user's browser
