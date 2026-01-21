@@ -71,7 +71,7 @@ def register_tools(mcp: FastMCP) -> None:
     def hello(
         name: Annotated[str, Field(title="Name", description="Name of the person to greet")],
     ) -> str:
-        """Say hello to a person."""
+        """Say hello to a person"""
         return f"Hello, {name}! Welcome to MCP."
 
     @mcp.tool(
@@ -93,7 +93,7 @@ def register_tools(mcp: FastMCP) -> None:
     def get_weather(
         city: Annotated[str, Field(title="City", description="City name to get weather for")],
     ) -> dict[str, Any]:
-        """Get the current weather for a city."""
+        """Get the current weather for a city"""
         conditions = ["sunny", "cloudy", "rainy", "windy"]
         return {
             "location": city,
@@ -128,7 +128,7 @@ def register_tools(mcp: FastMCP) -> None:
             int, Field(title="Max Tokens", description="Maximum tokens in response", default=100)
         ] = 100,
     ) -> str:
-        """Ask the connected LLM a question using sampling."""
+        """Ask the connected LLM a question using sampling"""
         try:
             result = await ctx.session.create_message(
                 messages=[
@@ -168,7 +168,7 @@ def register_tools(mcp: FastMCP) -> None:
             int, Field(title="Steps", description="Number of steps to simulate", default=5)
         ] = 5,
     ) -> str:
-        """Simulate a long-running task with progress updates."""
+        """Simulate a long-running task with progress updates"""
         await ctx.info(f"Starting task: {taskName}")
 
         for i in range(steps):
@@ -200,7 +200,7 @@ def register_tools(mcp: FastMCP) -> None:
         ],
     )
     async def load_bonus_tool(ctx: Context[ServerSession, None]) -> str:
-        """Dynamically register a new bonus tool."""
+        """Dynamically register a new bonus tool"""
         global _bonus_tool_loaded
 
         if _bonus_tool_loaded:
@@ -288,7 +288,7 @@ def register_tools(mcp: FastMCP) -> None:
             ),
         ] = False,
     ) -> str:
-        """Request user confirmation before proceeding."""
+        """Request user confirmation before proceeding"""
         try:
             # Form elicitation: Display a structured form with typed fields
             # The client renders this as a dialog/form based on the JSON schema
@@ -340,7 +340,7 @@ def register_tools(mcp: FastMCP) -> None:
         ],
         ctx: Context[ServerSession, None],
     ) -> str:
-        """Request feedback from the user."""
+        """Request feedback from the user"""
         feedback_url = "https://github.com/SamMorrowDrums/mcp-starters/issues/new?template=workshop-feedback.yml"
         if question:
             feedback_url += f"&title={question}"
