@@ -51,10 +51,10 @@ A demonstration MCP server showcasing Python/FastMCP capabilities.
 
 ## Available Resources
 
-- **info://about**: Server information
-- **file://example.md**: Sample markdown document
+- **about://server**: Server information
+- **doc://example**: Sample markdown document
 - **greeting://{name}**: Personalized greeting template
-- **data://items/{item_id}**: Item data by ID
+- **item://{id}**: Item data by ID
 
 ## Available Prompts
 
