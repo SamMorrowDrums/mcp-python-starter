@@ -24,7 +24,7 @@ def register_prompts(mcp: FastMCP) -> None:
         name: Annotated[str, Field(title="Name", description="Name of the person to greet")],
         style: Annotated[
             str,
-            Field(title="Style", description="Greeting style (formal/casual)", default="casual"),
+            Field(title="Style", description="Greeting style (formal/casual)"),
         ] = "casual",
     ) -> str:
         """Generate a greeting prompt.
@@ -48,16 +48,13 @@ def register_prompts(mcp: FastMCP) -> None:
         code: Annotated[str, Field(title="Code", description="The code to review")],
         language: Annotated[
             str,
-            Field(
-                title="Language", description="Programming language of the code", default="python"
-            ),
+            Field(title="Language", description="Programming language of the code"),
         ] = "python",
         focus: Annotated[
             str,
             Field(
                 title="Focus",
                 description="What to focus on (security, performance, readability, or all)",
-                default="all",
             ),
         ] = "all",
     ) -> str:

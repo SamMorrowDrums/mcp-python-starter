@@ -125,7 +125,7 @@ def register_tools(mcp: FastMCP) -> None:
         ],
         ctx: Context[ServerSession, None],
         maxTokens: Annotated[
-            int, Field(title="Max Tokens", description="Maximum tokens in response", default=100)
+            int, Field(title="Max Tokens", description="Maximum tokens in response")
         ] = 100,
     ) -> str:
         """Ask the connected LLM a question using sampling"""
@@ -164,9 +164,7 @@ def register_tools(mcp: FastMCP) -> None:
     async def long_task(
         taskName: Annotated[str, Field(title="Task Name", description="Name for this task")],
         ctx: Context[ServerSession, None],
-        steps: Annotated[
-            int, Field(title="Steps", description="Number of steps to simulate", default=5)
-        ] = 5,
+        steps: Annotated[int, Field(title="Steps", description="Number of steps to simulate")] = 5,
     ) -> str:
         """Simulate a long-running task with progress updates"""
         await ctx.info(f"Starting task: {taskName}")
@@ -283,9 +281,7 @@ def register_tools(mcp: FastMCP) -> None:
         ctx: Context[ServerSession, None],
         destructive: Annotated[
             bool,
-            Field(
-                title="Destructive", description="Whether the action is destructive", default=False
-            ),
+            Field(title="Destructive", description="Whether the action is destructive"),
         ] = False,
     ) -> str:
         """Request user confirmation before proceeding"""
