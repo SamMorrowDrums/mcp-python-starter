@@ -86,6 +86,15 @@ mcp = FastMCP(
     instructions=SERVER_INSTRUCTIONS,
 )
 
+# Enable listChanged notifications for dynamic tool loading (load_bonus_tool)
+# This tells clients to subscribe to tool list change notifications
+from mcp.server.lowlevel.server import NotificationOptions
+mcp._mcp_server.notification_options = NotificationOptions(
+    tools_changed=True,
+    resources_changed=False,
+    prompts_changed=False,
+)
+
 # Register all components
 register_tools(mcp)
 register_resources(mcp)
