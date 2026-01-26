@@ -17,6 +17,7 @@ from __future__ import annotations
 
 import click
 from mcp.server.fastmcp import FastMCP
+from mcp.server.lowlevel.server import NotificationOptions
 
 from .prompts import register_prompts
 from .resources import register_resources
@@ -88,8 +89,6 @@ mcp = FastMCP(
 
 # Enable listChanged notifications for dynamic tool loading (load_bonus_tool)
 # This tells clients to subscribe to tool list change notifications
-from mcp.server.lowlevel.server import NotificationOptions
-
 mcp._mcp_server.notification_options = NotificationOptions(
     tools_changed=True,
     resources_changed=False,
