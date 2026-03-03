@@ -87,13 +87,22 @@ mcp = FastMCP(
     instructions=SERVER_INSTRUCTIONS,
 )
 
-# Enable listChanged notifications for dynamic tool loading (load_bonus_tool)
-# This tells clients to subscribe to tool list change notifications
-mcp._mcp_server.notification_options = NotificationOptions(
-    tools_changed=True,
-    resources_changed=False,
-    prompts_changed=False,
-)
+# Enable listChanged notifications for dynamic tool loading (load_bonus_tool).
+# FastMCP calls create_initialization_options() without args, which defaults to
+# NotificationOptions() with all fields False. Override to inject tools_changed=True.
+_original_create_init_options = mcp._mcp_server.create_initialization_options
+
+
+def _patched_create_init_options(notification_options=None, experimental_capabilities=None):
+    if notification_options is None:
+        notification_options = NotificationOptions(tools_changed=True)
+    return _original_create_init_options(
+        notification_options=notification_options,
+        experimental_capabilities=experimental_capabilities or {},
+    )
+
+
+mcp._mcp_server.create_initialization_options = _patched_create_init_options
 
 # Register all components
 register_tools(mcp)
