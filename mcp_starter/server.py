@@ -17,6 +17,7 @@ from __future__ import annotations
 
 import click
 from mcp.server.fastmcp import FastMCP
+from mcp.server.lowlevel.server import NotificationOptions
 
 from .prompts import register_prompts
 from .resources import register_resources
@@ -85,6 +86,20 @@ mcp = FastMCP(
     "mcp-python-starter",
     instructions=SERVER_INSTRUCTIONS,
 )
+
+# Advertise listChanged capability for tools so clients know to expect
+# notifications when tools are dynamically added (e.g. load_bonus_tool).
+_original_create_init_options = mcp._mcp_server.create_initialization_options
+
+
+def _create_init_options_with_list_changed(**kwargs):
+    kwargs.setdefault(
+        "notification_options", NotificationOptions(tools_changed=True)
+    )
+    return _original_create_init_options(**kwargs)
+
+
+mcp._mcp_server.create_initialization_options = _create_init_options_with_list_changed
 
 # Register all components
 register_tools(mcp)
