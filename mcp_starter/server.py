@@ -104,6 +104,9 @@ def _patched_create_init_options(notification_options=None, experimental_capabil
 
 mcp._mcp_server.create_initialization_options = _patched_create_init_options
 
+# Override version to report server version (not SDK version)
+mcp._mcp_server.version = "1.0.0"
+
 # Register all components
 register_tools(mcp)
 register_resources(mcp)
