@@ -23,6 +23,13 @@
       }
     },
     {
+      "label": "Watch (stdio)",
+      "type": "shell",
+      "command": "uv run watchfiles 'uv run mcp-python-starter --stdio' mcp_starter/",
+      "group": "test",
+      "isBackground": true
+    },
+    {
       "label": "Test",
       "type": "shell",
       "command": "uv run pytest",

@@ -55,4 +55,5 @@ typeCheckingMode = "basic"
 [dependency-groups]
 dev = [
     "ruff>=0.14.11",
+    "watchfiles>=1.1.1",
 ]
