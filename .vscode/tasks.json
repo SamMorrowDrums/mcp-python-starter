@@ -1,0 +1,32 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "Run (stdio)",
+      "type": "shell",
+      "command": "uv run mcp-python-starter --stdio",
+      "group": "test"
+    },
+    {
+      "label": "Run (HTTP)",
+      "type": "shell",
+      "command": "uv run mcp-python-starter --http",
+      "group": "test"
+    },
+    {
+      "label": "Lint",
+      "type": "shell",
+      "command": "uv run ruff check mcp_starter/",
+      "group": {
+        "kind": "build",
+        "isDefault": true
+      }
+    },
+    {
+      "label": "Test",
+      "type": "shell",
+      "command": "uv run pytest",
+      "group": "test"
+    }
+  ]
+}
