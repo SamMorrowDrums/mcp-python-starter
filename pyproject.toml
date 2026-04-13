@@ -15,7 +15,7 @@ dependencies = [
 dev = [
     "ruff>=0.4.0",
     "pyright>=1.1.350",
-    "pytest>=8.0.0",
+    "pytest>=9.0.3",
 ]
 # Tasks are experimental and require additional dependencies for HTTP transport
 tasks = [
