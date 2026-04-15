@@ -20,7 +20,7 @@ dev = [
 # Tasks are experimental and require additional dependencies for HTTP transport
 tasks = [
     "starlette>=0.40.0",
-    "anyio>=4.0.0",
+    "anyio>=4.13.0",
 ]
 
 [project.scripts]
