@@ -6,13 +6,13 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![MCP](https://img.shields.io/badge/MCP-Model%20Context%20Protocol-purple)](https://modelcontextprotocol.io/)
 
-A feature-complete Model Context Protocol (MCP) server template in Python using FastMCP. This starter demonstrates all major MCP features with clean, Pythonic code.
+A feature-complete Model Context Protocol (MCP) server template in Python using the official MCP Python SDK. This starter demonstrates core MCP features with clean, Pythonic code.
 
 ## 📚 Documentation
 
 - [Model Context Protocol](https://modelcontextprotocol.io/)
 - [Python SDK](https://github.com/modelcontextprotocol/python-sdk)
-- [FastMCP Guide](https://modelcontextprotocol.io/docs/develop/build-server)
+- [MCP Server Guide](https://modelcontextprotocol.io/docs/develop/build-server)
 
 ## ✨ Features
 
@@ -152,17 +152,20 @@ npx @modelcontextprotocol/inspector -- uv run mcp-python-starter
 
 ## 📖 Feature Examples
 
-### Tool with Annotations (FastMCP decorator)
+### Tool with Annotations (MCPServer decorator)
 
 ```python
+from mcp.types import ToolAnnotations
+
+
 @mcp.tool(
     title="Say Hello",
     description="A friendly greeting tool",
-    annotations={"readOnlyHint": True},
+    annotations=ToolAnnotations(read_only_hint=True),
 )
 def hello(name: str) -> str:
     """Say hello to someone.
-    
+
     Args:
         name: The name to greet
     """
@@ -184,7 +187,7 @@ def greeting_template(name: str) -> str:
 @mcp.tool(title="Long Task")
 async def long_task(
     task_name: str,
-    ctx: Context[ServerSession, None],
+    ctx: Context,
 ) -> str:
     for i in range(5):
         await ctx.report_progress(
@@ -199,17 +202,24 @@ async def long_task(
 ### Tool with Sampling
 
 ```python
+from mcp.types import SamplingMessage, TextContent
+
+
 @mcp.tool(title="Ask LLM")
 async def ask_llm(
     prompt: str,
-    ctx: Context[ServerSession, None],
+    ctx: Context,
 ) -> str:
     result = await ctx.session.create_message(
-        messages=[{"role": "user", "content": {"type": "text", "text": prompt}}],
+        messages=[SamplingMessage(role="user", content=TextContent(text=prompt))],
         max_tokens=100,
     )
-    return result.content.text
+    if isinstance(result.content, TextContent):
+        return result.content.text
+    return "[non-text response]"
 ```
+
+This demonstrates compatibility with clients that still support the legacy sampling method; newer protocol versions deprecate server-initiated sampling.
 
 ## 🔐 Environment Variables
 

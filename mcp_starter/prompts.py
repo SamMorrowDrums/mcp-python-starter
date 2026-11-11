@@ -4,11 +4,11 @@ from __future__ import annotations
 
 from typing import Annotated
 
-from mcp.server.fastmcp import FastMCP
+from mcp.server.mcpserver import MCPServer
 from pydantic import Field
 
 
-def register_prompts(mcp: FastMCP) -> None:
+def register_prompts(mcp: MCPServer) -> None:
     """Register all prompts with the MCP server.
 
     Note: The Python MCP SDK's PromptArgument model does not support a 'title' field,
@@ -21,10 +21,10 @@ def register_prompts(mcp: FastMCP) -> None:
         description="Generate a greeting message",
     )
     def greet(
-        name: Annotated[str, Field(title="Name", description="Name of the person to greet")],
+        name: Annotated[str, Field(description="Name of the person to greet")],
         style: Annotated[
             str,
-            Field(title="Style", description="Greeting style (formal/casual)"),
+            Field(description="Greeting style (formal/casual)"),
         ] = "casual",
     ) -> str:
         """Generate a greeting prompt.
@@ -45,7 +45,7 @@ def register_prompts(mcp: FastMCP) -> None:
         description="Review code for potential improvements",
     )
     def code_review(
-        code: Annotated[str, Field(title="Code", description="The code to review")],
+        code: Annotated[str, Field(description="The code to review")],
     ) -> str:
         """Generate a code review prompt.
 

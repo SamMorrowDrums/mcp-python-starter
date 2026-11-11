@@ -18,14 +18,14 @@ This file provides context for AI coding agents working in this repository.
 
 ## Project Overview
 
-**MCP Python Starter** is a feature-complete Model Context Protocol (MCP) server template in Python using FastMCP. It demonstrates all major MCP features including tools, resources, resource templates, prompts, sampling, progress updates, and dynamic tool loading.
+**MCP Python Starter** is a feature-complete Model Context Protocol (MCP) server template in Python using the official MCP Python SDK's `MCPServer`. It demonstrates MCP tools, resources, resource templates, prompts, sampling, progress updates, elicitation, and dynamic tool loading.
 
 **Purpose**: Workshop starter template for learning MCP server development.
 
 ## Technology Stack
 
 - **Runtime**: Python >=3.11
-- **MCP SDK**: `mcp` (FastMCP)
+- **MCP SDK**: `mcp` (`MCPServer`)
 - **HTTP Server**: uvicorn
 - **CLI**: Click
 - **Package Manager**: uv (lockfile: `uv.lock` - committed to repo)
@@ -116,7 +116,7 @@ uv run pytest -v
 
 ## Conventions
 
-- Use FastMCP decorators (`@mcp.tool()`, `@mcp.resource()`, `@mcp.prompt()`)
+- Use `MCPServer` decorators (`@mcp.tool()`, `@mcp.resource()`, `@mcp.prompt()`)
 - Type hints on all functions
 - Docstrings for tools (used as MCP descriptions)
 - Use Ruff for linting and formatting
@@ -131,6 +131,6 @@ All configured in `pyproject.toml`:
 ## Documentation Links
 
 - [MCP Specification](https://modelcontextprotocol.io/)
-- [Python SDK (FastMCP)](https://github.com/modelcontextprotocol/python-sdk)
+- [Python SDK (`MCPServer`)](https://github.com/modelcontextprotocol/python-sdk)
 - [Building Servers](https://modelcontextprotocol.io/docs/develop/build-server)
 - [uv Package Manager](https://docs.astral.sh/uv/)

@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import json
 
-from mcp.server.fastmcp import FastMCP
+from mcp.server.mcpserver import MCPServer
 
 # Example data for resources
 ITEMS_DATA: dict[str, dict[str, str]] = {
@@ -14,7 +14,7 @@ ITEMS_DATA: dict[str, dict[str, str]] = {
 }
 
 
-def register_resources(mcp: FastMCP) -> None:
+def register_resources(mcp: MCPServer) -> None:
     """Register all resources and templates with the MCP server."""
 
     @mcp.resource("about://server", name="About", description="Information about this MCP server")
