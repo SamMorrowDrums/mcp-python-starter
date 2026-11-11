@@ -27,10 +27,25 @@ from __future__ import annotations
 import asyncio
 import random
 from typing import Annotated, Any, Literal
+from uuid import uuid4
 
-from mcp.server.fastmcp import Context, FastMCP
-from mcp.server.session import ServerSession
-from mcp.types import Icon, ToolAnnotations
+from mcp.server.mcpserver import Context, MCPServer
+from mcp.types import (
+    CreateMessageRequest,
+    CreateMessageRequestParams,
+    CreateMessageResult,
+    CreateMessageResultWithTools,
+    ElicitRequest,
+    ElicitRequestFormParams,
+    ElicitRequestURLParams,
+    ElicitResult,
+    Icon,
+    InputRequiredResult,
+    SamplingMessage,
+    TextContent,
+    ToolAnnotations,
+)
+from mcp_types.version import MODERN_PROTOCOL_VERSIONS
 from pydantic import Field
 
 from .icons import (
@@ -49,49 +64,49 @@ Operation = Literal["add", "subtract", "multiply", "divide"]
 _bonus_tool_loaded = False
 
 
-def register_tools(mcp: FastMCP) -> None:
+def register_tools(mcp: MCPServer) -> None:
     """Register all tools with the MCP server."""
 
     @mcp.tool(
+        title="Say Hello",
         annotations=ToolAnnotations(
-            title="Say Hello",
-            readOnlyHint=True,
-            destructiveHint=False,
-            idempotentHint=True,
-            openWorldHint=False,
+            read_only_hint=True,
+            destructive_hint=False,
+            idempotent_hint=True,
+            open_world_hint=False,
         ),
         icons=[
             Icon(
                 src=WAVING_HAND_ICON,
-                mimeType="image/png",
+                mime_type="image/png",
                 sizes=["256x256"],
             ),
         ],
     )
     def hello(
-        name: Annotated[str, Field(title="Name", description="Name of the person to greet")],
+        name: Annotated[str, Field(description="Name of the person to greet")],
     ) -> str:
         """Say hello to a person"""
         return f"Hello, {name}! Welcome to MCP."
 
     @mcp.tool(
+        title="Get Weather",
         annotations=ToolAnnotations(
-            title="Get Weather",
-            readOnlyHint=True,
-            destructiveHint=False,
-            idempotentHint=False,  # Simulated - results vary
-            openWorldHint=False,  # Not real external call
+            read_only_hint=True,
+            destructive_hint=False,
+            idempotent_hint=False,  # Simulated - results vary
+            open_world_hint=False,  # Not real external call
         ),
         icons=[
             Icon(
                 src=SUN_BEHIND_CLOUD_ICON,
-                mimeType="image/png",
+                mime_type="image/png",
                 sizes=["256x256"],
             ),
         ],
     )
     def get_weather(
-        city: Annotated[str, Field(title="City", description="City name to get weather for")],
+        city: Annotated[str, Field(description="City name to get weather for")],
     ) -> dict[str, Any]:
         """Get the current weather for a city"""
         conditions = ["sunny", "cloudy", "rainy", "windy"]
@@ -104,67 +119,74 @@ def register_tools(mcp: FastMCP) -> None:
         }
 
     @mcp.tool(
+        title="Ask LLM",
         annotations=ToolAnnotations(
-            title="Ask LLM",
-            readOnlyHint=True,
-            destructiveHint=False,
-            idempotentHint=False,  # LLM responses vary
-            openWorldHint=False,
+            read_only_hint=True,
+            destructive_hint=False,
+            idempotent_hint=False,  # LLM responses vary
+            open_world_hint=False,
         ),
         icons=[
             Icon(
                 src=ROBOT_ICON,
-                mimeType="image/png",
+                mime_type="image/png",
                 sizes=["256x256"],
             ),
         ],
     )
     async def ask_llm(
-        prompt: Annotated[
-            str, Field(title="Prompt", description="The question or prompt to send to the LLM")
-        ],
-        ctx: Context[ServerSession, None],
-        maxTokens: Annotated[
-            int, Field(title="Max Tokens", description="Maximum tokens in response")
-        ] = 100,
-    ) -> str:
+        prompt: Annotated[str, Field(description="The question or prompt to send to the LLM")],
+        ctx: Context,
+        maxTokens: Annotated[int, Field(description="Maximum tokens in response")] = 100,
+    ) -> str | InputRequiredResult:
         """Ask the connected LLM a question using sampling"""
         try:
-            result = await ctx.session.create_message(
-                messages=[
-                    {
-                        "role": "user",
-                        "content": {"type": "text", "text": prompt},
-                    }
-                ],
-                max_tokens=maxTokens,
-            )
-            if result.content.type == "text":
+            messages = [SamplingMessage(role="user", content=TextContent(text=prompt))]
+            if ctx.protocol_version in MODERN_PROTOCOL_VERSIONS:
+                result = (ctx.input_responses or {}).get("sampling")
+                if result is None:
+                    return InputRequiredResult(
+                        input_requests={
+                            "sampling": CreateMessageRequest(
+                                params=CreateMessageRequestParams(
+                                    messages=messages, max_tokens=maxTokens
+                                )
+                            )
+                        },
+                        request_state="ask_llm",
+                    )
+                if ctx.request_state != "ask_llm":
+                    raise ValueError("Missing or invalid sampling request state")
+                if not isinstance(result, (CreateMessageResult, CreateMessageResultWithTools)):
+                    raise ValueError("Invalid sampling response")
+            else:
+                result = await ctx.session.create_message(messages=messages, max_tokens=maxTokens)
+            if isinstance(result.content, TextContent):
                 return f"LLM Response: {result.content.text}"
             return "LLM Response: [non-text response]"
         except Exception as e:
             return f"Sampling not supported or failed: {e}"
 
     @mcp.tool(
+        title="Long Running Task",
         annotations=ToolAnnotations(
-            title="Long Running Task",
-            readOnlyHint=True,
-            destructiveHint=False,
-            idempotentHint=True,
-            openWorldHint=False,
+            read_only_hint=True,
+            destructive_hint=False,
+            idempotent_hint=True,
+            open_world_hint=False,
         ),
         icons=[
             Icon(
                 src=HOURGLASS_ICON,
-                mimeType="image/png",
+                mime_type="image/png",
                 sizes=["256x256"],
             ),
         ],
     )
     async def long_task(
-        taskName: Annotated[str, Field(title="Task Name", description="Name for this task")],
-        ctx: Context[ServerSession, None],
-        steps: Annotated[int, Field(title="Steps", description="Number of steps to simulate")] = 5,
+        taskName: Annotated[str, Field(description="Name for this task")],
+        ctx: Context,
+        steps: Annotated[int, Field(description="Number of steps to simulate")] = 5,
     ) -> str:
         """Simulate a long-running task with progress updates"""
         await ctx.info(f"Starting task: {taskName}")
@@ -182,22 +204,22 @@ def register_tools(mcp: FastMCP) -> None:
         return f'Task "{taskName}" completed successfully after {steps} steps!'
 
     @mcp.tool(
+        title="Load Bonus Tool",
         annotations=ToolAnnotations(
-            title="Load Bonus Tool",
-            readOnlyHint=False,  # Modifies server state
-            destructiveHint=False,
-            idempotentHint=True,  # Safe to call multiple times
-            openWorldHint=False,
+            read_only_hint=False,  # Modifies server state
+            destructive_hint=False,
+            idempotent_hint=True,  # Safe to call multiple times
+            open_world_hint=False,
         ),
         icons=[
             Icon(
                 src=PACKAGE_ICON,
-                mimeType="image/png",
+                mime_type="image/png",
                 sizes=["256x256"],
             ),
         ],
     )
-    async def load_bonus_tool(ctx: Context[ServerSession, None]) -> str:
+    async def load_bonus_tool(ctx: Context) -> str:
         """Dynamically register a new bonus tool"""
         global _bonus_tool_loaded
 
@@ -205,17 +227,17 @@ def register_tools(mcp: FastMCP) -> None:
             return "Bonus tool is already loaded! Try calling 'bonus_calculator'."
 
         @mcp.tool(
+            title="Bonus Calculator",
             annotations=ToolAnnotations(
-                title="Bonus Calculator",
-                readOnlyHint=True,
-                destructiveHint=False,
-                idempotentHint=True,  # Pure computation
-                openWorldHint=False,
+                read_only_hint=True,
+                destructive_hint=False,
+                idempotent_hint=True,  # Pure computation
+                open_world_hint=False,
             ),
             icons=[
                 Icon(
                     src=ABACUS_ICON,
-                    mimeType="image/png",
+                    mime_type="image/png",
                     sizes=["256x256"],
                 ),
             ],
@@ -239,8 +261,9 @@ def register_tools(mcp: FastMCP) -> None:
 
         _bonus_tool_loaded = True
 
-        # Notify clients that the tools list has changed
-        await ctx.session.send_tool_list_changed()
+        await ctx.notify_tools_changed()
+        if ctx.protocol_version != "2026-07-28":
+            await ctx.session.send_tool_list_changed()
 
         return "Bonus tool 'bonus_calculator' has been loaded! The tools list has been updated."
 
@@ -266,51 +289,70 @@ def register_tools(mcp: FastMCP) -> None:
     # =========================================================================
 
     @mcp.tool(
+        title="Confirm Action",
         annotations=ToolAnnotations(
-            title="Confirm Action",
-            readOnlyHint=True,
-            destructiveHint=False,
-            idempotentHint=False,  # User response varies
-            openWorldHint=False,
+            read_only_hint=True,
+            destructive_hint=False,
+            idempotent_hint=False,  # User response varies
+            open_world_hint=False,
         ),
     )
     async def confirm_action(
-        action: Annotated[
-            str, Field(title="Action", description="Description of the action to confirm")
-        ],
-        ctx: Context[ServerSession, None],
+        action: Annotated[str, Field(description="Description of the action to confirm")],
+        ctx: Context,
         destructive: Annotated[
             bool,
-            Field(title="Destructive", description="Whether the action is destructive"),
+            Field(description="Whether the action is destructive"),
         ] = False,
-    ) -> str:
+    ) -> str | InputRequiredResult:
         """Request user confirmation before proceeding"""
         try:
             # Form elicitation: Display a structured form with typed fields
             # The client renders this as a dialog/form based on the JSON schema
-            result = await ctx.session.elicit_form(
-                message=f"Please confirm: {action}",
-                requestedSchema={
-                    "type": "object",
-                    "properties": {
-                        "confirm": {
-                            "type": "boolean",
-                            "title": "Confirm",
-                            "description": "Confirm the action",
-                        },
-                        "reason": {
-                            "type": "string",
-                            "title": "Reason",
-                            "description": "Optional reason for your choice",
-                        },
+            message = f"Please confirm: {action}"
+            schema = {
+                "type": "object",
+                "properties": {
+                    "confirm": {
+                        "type": "boolean",
+                        "title": "Confirm",
+                        "description": "Confirm the action",
                     },
-                    "required": ["confirm"],
+                    "reason": {
+                        "type": "string",
+                        "title": "Reason",
+                        "description": "Optional reason for your choice",
+                    },
                 },
-            )
+                "required": ["confirm"],
+            }
+            if ctx.protocol_version in MODERN_PROTOCOL_VERSIONS:
+                result = (ctx.input_responses or {}).get("confirmation")
+                if result is None:
+                    return InputRequiredResult(
+                        input_requests={
+                            "confirmation": ElicitRequest(
+                                params=ElicitRequestFormParams(
+                                    message=message, requested_schema=schema
+                                )
+                            )
+                        },
+                        request_state="confirm_action",
+                    )
+                if ctx.request_state != "confirm_action":
+                    raise ValueError("Missing or invalid confirmation request state")
+                if not isinstance(result, ElicitResult):
+                    raise ValueError("Invalid elicitation response")
+            else:
+                result = await ctx.session.elicit_form(message=message, requested_schema=schema)
 
             if result.action == "accept":
                 content = result.content or {}
-                if content.get("confirm"):
+                if not isinstance(content.get("confirm"), bool) or (
+                    "reason" in content and not isinstance(content["reason"], str)
+                ):
+                    raise ValueError("Invalid confirmation response")
+                if content["confirm"]:
                     reason = content.get("reason", "No reason provided")
                     return f"Action confirmed: {action}\nReason: {reason}"
                 return f"Action declined by user: {action}"
@@ -322,20 +364,18 @@ def register_tools(mcp: FastMCP) -> None:
             return f"Elicitation not supported or failed: {e}"
 
     @mcp.tool(
+        title="Get Feedback",
         annotations=ToolAnnotations(
-            title="Get Feedback",
-            readOnlyHint=True,
-            destructiveHint=False,
-            idempotentHint=False,  # User response varies
-            openWorldHint=True,  # Opens external URL
+            read_only_hint=True,
+            destructive_hint=False,
+            idempotent_hint=False,  # User response varies
+            open_world_hint=True,  # Opens external URL
         ),
     )
     async def get_feedback(
-        question: Annotated[
-            str, Field(title="Question", description="The question to ask the user")
-        ],
-        ctx: Context[ServerSession, None],
-    ) -> str:
+        question: Annotated[str, Field(description="The question to ask the user")],
+        ctx: Context,
+    ) -> str | InputRequiredResult:
         """Request feedback from the user"""
         feedback_url = "https://github.com/SamMorrowDrums/mcp-starters/issues/new?template=workshop-feedback.yml"
         if question:
@@ -344,10 +384,28 @@ def register_tools(mcp: FastMCP) -> None:
         try:
             # URL elicitation: Open a web page in the user's browser
             # Useful for OAuth flows, external forms, documentation links, etc.
-            result = await ctx.session.elicit_url(
-                message="Please provide feedback on MCP Starters by completing the form at the URL below:",
-                url=feedback_url,
+            message = (
+                "Please provide feedback on MCP Starters by completing the form at the URL below:"
             )
+            if ctx.protocol_version in MODERN_PROTOCOL_VERSIONS:
+                result = (ctx.input_responses or {}).get("feedback")
+                if result is None:
+                    return InputRequiredResult(
+                        input_requests={
+                            "feedback": ElicitRequest(
+                                params=ElicitRequestURLParams(message=message, url=feedback_url)
+                            )
+                        },
+                        request_state="get_feedback",
+                    )
+                if ctx.request_state != "get_feedback":
+                    raise ValueError("Missing or invalid feedback request state")
+                if not isinstance(result, ElicitResult):
+                    raise ValueError("Invalid elicitation response")
+            else:
+                result = await ctx.session.elicit_url(
+                    message=message, url=feedback_url, elicitation_id=str(uuid4())
+                )
 
             if result.action == "accept":
                 return "Thank you for providing feedback! Your input helps improve MCP Starters."

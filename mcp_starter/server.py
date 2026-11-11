@@ -1,7 +1,7 @@
 """
-MCP Python Starter - FastMCP Server
+MCP Python Starter - MCPServer
 
-A feature-complete Model Context Protocol server demonstrating:
+A Model Context Protocol server demonstrating:
 - Tools with annotations, sampling, progress, and dynamic loading
 - Resources (static and dynamic) and templates
 - Prompts with completions
@@ -16,8 +16,8 @@ Documentation: https://modelcontextprotocol.io/
 from __future__ import annotations
 
 import click
-from mcp.server.fastmcp import FastMCP
 from mcp.server.lowlevel.server import NotificationOptions
+from mcp.server.mcpserver import MCPServer
 
 from .prompts import register_prompts
 from .resources import register_resources
@@ -30,7 +30,7 @@ from .tools import register_tools
 SERVER_INSTRUCTIONS = """
 # MCP Python Starter Server
 
-A demonstration MCP server showcasing Python/FastMCP capabilities.
+A demonstration MCP server showcasing the Python SDK's MCPServer capabilities.
 
 ## Recommended Workflows
 
@@ -53,29 +53,31 @@ A demonstration MCP server showcasing Python/FastMCP capabilities.
 - Resources and prompts are available for context and templating — use `resources/list` and `prompts/list` to discover them
 """.strip()
 
-# Initialize FastMCP server with instructions
-mcp = FastMCP(
+# Initialize MCP server with instructions
+mcp = MCPServer(
     "mcp-python-starter",
     instructions=SERVER_INSTRUCTIONS,
+    version="1.0.0",
 )
-mcp._mcp_server.version = "1.0.0"
 
 # Enable listChanged notifications for dynamic tool loading (load_bonus_tool).
-# FastMCP calls create_initialization_options() without args, which defaults to
-# NotificationOptions() with all fields False. Override to inject tools_changed=True.
-_original_create_init_options = mcp._mcp_server.create_initialization_options
+# MCPServer defaults to no legacy listChanged notifications.
+_original_create_init_options = mcp._lowlevel_server.create_initialization_options
 
 
-def _patched_create_init_options(notification_options=None, experimental_capabilities=None):
+def _patched_create_init_options(
+    notification_options=None, experimental_capabilities=None, extensions=None
+):
     if notification_options is None:
         notification_options = NotificationOptions(tools_changed=True)
     return _original_create_init_options(
         notification_options=notification_options,
         experimental_capabilities=experimental_capabilities or {},
+        extensions=extensions,
     )
 
 
-mcp._mcp_server.create_initialization_options = _patched_create_init_options
+mcp._lowlevel_server.create_initialization_options = _patched_create_init_options
 
 # Register all components
 register_tools(mcp)
@@ -95,9 +97,7 @@ def main(stdio: bool, http: bool, port: int) -> None:
     if stdio or (not stdio and not http):
         mcp.run(transport="stdio")
     elif http:
-        # Port must be set via settings, not run() parameter
-        mcp.settings.port = port
-        mcp.run(transport="streamable-http")
+        mcp.run(transport="streamable-http", port=port)
 
 
 if __name__ == "__main__":

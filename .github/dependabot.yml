@@ -8,8 +8,8 @@ updates:
     commit-message:
       prefix: "ci"
 
-  # Python dependencies (pip/uv)
-  - package-ecosystem: "pip"
+  # Python dependencies managed with uv
+  - package-ecosystem: "uv"
     directory: "/"
     schedule:
       interval: "weekly"

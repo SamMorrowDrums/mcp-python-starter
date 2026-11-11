@@ -6,6 +6,9 @@ on:
   pull_request:
     branches: [main]
 
+permissions:
+  contents: read
+
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -36,4 +39,4 @@ jobs:
         run: uv run mypy . --ignore-missing-imports || true
 
       - name: Test
-        run: uv run pytest -v --tb=short || true
+        run: uv run pytest -v --tb=short
