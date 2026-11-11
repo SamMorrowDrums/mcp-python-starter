@@ -202,24 +202,27 @@ async def long_task(
 ### Tool with Sampling
 
 ```python
-from mcp.types import SamplingMessage, TextContent
+from typing import Annotated
+
+from mcp.server.mcpserver import Resolve, Sample
+from mcp.types import CreateMessageResult, SamplingMessage, TextContent
+
+
+def request_sample(prompt: str) -> Sample:
+    return Sample([SamplingMessage(role="user", content=TextContent(text=prompt))], max_tokens=100)
 
 
 @mcp.tool(title="Ask LLM")
 async def ask_llm(
     prompt: str,
-    ctx: Context,
+    result: Annotated[CreateMessageResult, Resolve(request_sample)],
 ) -> str:
-    result = await ctx.session.create_message(
-        messages=[SamplingMessage(role="user", content=TextContent(text=prompt))],
-        max_tokens=100,
-    )
     if isinstance(result.content, TextContent):
         return result.content.text
     return "[non-text response]"
 ```
 
-This demonstrates compatibility with clients that still support the legacy sampling method; newer protocol versions deprecate server-initiated sampling.
+The server uses multi-round-trip requests for sampling on modern protocol versions and the legacy back-channel for older clients.
 
 ## 🔐 Environment Variables
 

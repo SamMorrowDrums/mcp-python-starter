@@ -30,7 +30,22 @@ from typing import Annotated, Any, Literal
 from uuid import uuid4
 
 from mcp.server.mcpserver import Context, MCPServer
-from mcp.types import Icon, SamplingMessage, TextContent, ToolAnnotations
+from mcp.types import (
+    CreateMessageRequest,
+    CreateMessageRequestParams,
+    CreateMessageResult,
+    CreateMessageResultWithTools,
+    ElicitRequest,
+    ElicitRequestFormParams,
+    ElicitRequestURLParams,
+    ElicitResult,
+    Icon,
+    InputRequiredResult,
+    SamplingMessage,
+    TextContent,
+    ToolAnnotations,
+)
+from mcp_types.version import MODERN_PROTOCOL_VERSIONS
 from pydantic import Field
 
 from .icons import (
@@ -123,13 +138,29 @@ def register_tools(mcp: MCPServer) -> None:
         prompt: Annotated[str, Field(description="The question or prompt to send to the LLM")],
         ctx: Context,
         maxTokens: Annotated[int, Field(description="Maximum tokens in response")] = 100,
-    ) -> str:
+    ) -> str | InputRequiredResult:
         """Ask the connected LLM a question using sampling"""
         try:
-            result = await ctx.session.create_message(
-                messages=[SamplingMessage(role="user", content=TextContent(text=prompt))],
-                max_tokens=maxTokens,
-            )
+            messages = [SamplingMessage(role="user", content=TextContent(text=prompt))]
+            if ctx.protocol_version in MODERN_PROTOCOL_VERSIONS:
+                result = (ctx.input_responses or {}).get("sampling")
+                if result is None:
+                    return InputRequiredResult(
+                        input_requests={
+                            "sampling": CreateMessageRequest(
+                                params=CreateMessageRequestParams(
+                                    messages=messages, max_tokens=maxTokens
+                                )
+                            )
+                        },
+                        request_state="ask_llm",
+                    )
+                if ctx.request_state != "ask_llm":
+                    raise ValueError("Missing or invalid sampling request state")
+                if not isinstance(result, (CreateMessageResult, CreateMessageResultWithTools)):
+                    raise ValueError("Invalid sampling response")
+            else:
+                result = await ctx.session.create_message(messages=messages, max_tokens=maxTokens)
             if isinstance(result.content, TextContent):
                 return f"LLM Response: {result.content.text}"
             return "LLM Response: [non-text response]"
@@ -273,34 +304,55 @@ def register_tools(mcp: MCPServer) -> None:
             bool,
             Field(description="Whether the action is destructive"),
         ] = False,
-    ) -> str:
+    ) -> str | InputRequiredResult:
         """Request user confirmation before proceeding"""
         try:
             # Form elicitation: Display a structured form with typed fields
             # The client renders this as a dialog/form based on the JSON schema
-            result = await ctx.session.elicit_form(
-                message=f"Please confirm: {action}",
-                requested_schema={
-                    "type": "object",
-                    "properties": {
-                        "confirm": {
-                            "type": "boolean",
-                            "title": "Confirm",
-                            "description": "Confirm the action",
-                        },
-                        "reason": {
-                            "type": "string",
-                            "title": "Reason",
-                            "description": "Optional reason for your choice",
-                        },
+            message = f"Please confirm: {action}"
+            schema = {
+                "type": "object",
+                "properties": {
+                    "confirm": {
+                        "type": "boolean",
+                        "title": "Confirm",
+                        "description": "Confirm the action",
                     },
-                    "required": ["confirm"],
+                    "reason": {
+                        "type": "string",
+                        "title": "Reason",
+                        "description": "Optional reason for your choice",
+                    },
                 },
-            )
+                "required": ["confirm"],
+            }
+            if ctx.protocol_version in MODERN_PROTOCOL_VERSIONS:
+                result = (ctx.input_responses or {}).get("confirmation")
+                if result is None:
+                    return InputRequiredResult(
+                        input_requests={
+                            "confirmation": ElicitRequest(
+                                params=ElicitRequestFormParams(
+                                    message=message, requested_schema=schema
+                                )
+                            )
+                        },
+                        request_state="confirm_action",
+                    )
+                if ctx.request_state != "confirm_action":
+                    raise ValueError("Missing or invalid confirmation request state")
+                if not isinstance(result, ElicitResult):
+                    raise ValueError("Invalid elicitation response")
+            else:
+                result = await ctx.session.elicit_form(message=message, requested_schema=schema)
 
             if result.action == "accept":
                 content = result.content or {}
-                if content.get("confirm"):
+                if not isinstance(content.get("confirm"), bool) or (
+                    "reason" in content and not isinstance(content["reason"], str)
+                ):
+                    raise ValueError("Invalid confirmation response")
+                if content["confirm"]:
                     reason = content.get("reason", "No reason provided")
                     return f"Action confirmed: {action}\nReason: {reason}"
                 return f"Action declined by user: {action}"
@@ -323,7 +375,7 @@ def register_tools(mcp: MCPServer) -> None:
     async def get_feedback(
         question: Annotated[str, Field(description="The question to ask the user")],
         ctx: Context,
-    ) -> str:
+    ) -> str | InputRequiredResult:
         """Request feedback from the user"""
         feedback_url = "https://github.com/SamMorrowDrums/mcp-starters/issues/new?template=workshop-feedback.yml"
         if question:
@@ -332,11 +384,28 @@ def register_tools(mcp: MCPServer) -> None:
         try:
             # URL elicitation: Open a web page in the user's browser
             # Useful for OAuth flows, external forms, documentation links, etc.
-            result = await ctx.session.elicit_url(
-                message="Please provide feedback on MCP Starters by completing the form at the URL below:",
-                url=feedback_url,
-                elicitation_id=str(uuid4()),
+            message = (
+                "Please provide feedback on MCP Starters by completing the form at the URL below:"
             )
+            if ctx.protocol_version in MODERN_PROTOCOL_VERSIONS:
+                result = (ctx.input_responses or {}).get("feedback")
+                if result is None:
+                    return InputRequiredResult(
+                        input_requests={
+                            "feedback": ElicitRequest(
+                                params=ElicitRequestURLParams(message=message, url=feedback_url)
+                            )
+                        },
+                        request_state="get_feedback",
+                    )
+                if ctx.request_state != "get_feedback":
+                    raise ValueError("Missing or invalid feedback request state")
+                if not isinstance(result, ElicitResult):
+                    raise ValueError("Invalid elicitation response")
+            else:
+                result = await ctx.session.elicit_url(
+                    message=message, url=feedback_url, elicitation_id=str(uuid4())
+                )
 
             if result.action == "accept":
                 return "Thank you for providing feedback! Your input helps improve MCP Starters."
